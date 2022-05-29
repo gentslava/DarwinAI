@@ -1,0 +1,639 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="head">
+    <div class="nav-prev">
+        <h1>Команда</h1>
+    </div>
+    <input type="date">
+</div>
+<div class="body">
+    <div class="control">
+        <div class="button" id="add-manager">Добавить менеджера</div>
+    </div>
+    <div class="table" id="managers-group">
+        <div class="tr table-headers">
+            <span class="th" style="width: 60px;"></span>
+            <span class="th" style="width: 30%;">Менеджер</span>
+            <span class="th">Отдел</span>
+            <span class="th">Проекты</span>
+            <span class="th" style="width: 15%;">Статус</span>
+            <span class="th" style="text-align: center;">Действие</span>
+        </div>
+    </div>
+    <div class="control" style="margin-top: 120px;">
+        <div class="button" id="add-department">Добавить отдел</div>
+    </div>
+    <div class="table" id="departments-group">
+        <div class="tr table-headers">
+            <span class="th">Название</span>
+            <span class="th" style="text-align: center;">Действие</span>
+        </div>
+    </div>
+    <div class="control" style="margin-top: 120px;">
+        <div class="button" id="add-product">Добавить проект</div>
+    </div>
+    <div class="table" id="products-group">
+        <div class="tr table-headers">
+            <span class="th">Название</span>
+            <span class="th" style="text-align: center;">Действие</span>
+        </div>
+    </div>
+</div>
+<div class="popup add-block">
+    <div>
+        <p style="align-self: flex-start; font-size: 22px; font-weight: 500; margin-bottom: 20px;">Добавить сотрудника</p>
+        <form class="person" type="manager" style="overflow-y: auto; overflow-x: hidden;">
+            {% csrf_token %}
+            <div class="input-names">
+                <div>
+                    <label>Имя{{form.first_name}}</label>
+                </div>
+                <div>
+                    <label>Фамилия{{form.last_name}}</label>
+                </div>
+                <p>Отдел</p>
+                <div><select></select></div>
+            </div>
+            <p>Проекты</p>
+            <div style="height: 100%; overflow-y: auto;">
+                <div class="products"></div>
+            </div>
+            <div class="control-buttons" style="margin-top: 40px;">
+                <button type="submit" class="button">Создать</button>
+                <div class="button cancel">Отмена</div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="popup edit-block">
+    <div>
+        <p style="align-self: flex-start; font-size: 22px; font-weight: 500; margin-bottom: 20px;">Редактировать сотрудника</p>
+        <form class="person" type="manager" style="overflow-y: auto; overflow-x: hidden;">
+            {% csrf_token %}
+            <div class="input-names">
+                <div>
+                    <label>Имя{{form.first_name}}</label>
+                </div>
+                <div>
+                    <label>Фамилия{{form.last_name}}</label>
+                </div>
+                <p>Отдел</p>
+                <div><select></select></div>
+            </div>
+            <p>Проекты</p>
+            <div style="height: 100%; overflow-y: auto;">
+                <div class="products"></div>
+            </div>
+            <div>
+                <label class="toggle-switch">Статус
+                    <input type="checkbox" id="toggle-switch-input">
+                    <label for="toggle-switch-input" style="position: absolute; top: 20px;"></label>
+                    <span style="position: absolute; top: 25px; left: calc(var(--bar-width) + 25px);">Активный</span>
+                </label>
+            </div>
+            <div class="control-buttons" style="margin-top: 40px;">
+                <button type="submit" class="button">Сохранить</button>
+                <div class="button remove">Удалить пользователя</div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="popup add-block department">
+    <div>
+        <p style="align-self: flex-start; font-size: 22px; font-weight: 500; margin-bottom: 20px;">Добавить отдел</p>
+        <form class="person" type="department">
+            {% csrf_token %}
+            <div class="input-names" style="height: 100%;">
+                <div>
+                    <label>Название{{form.department}}</label>
+                </div>
+            </div>
+            <div class="control-buttons" style="margin-top: 40px;">
+                <button type="submit" class="button">Создать</button>
+                <div class="button cancel">Отмена</div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="popup edit-block department">
+    <div>
+        <p style="align-self: flex-start; font-size: 22px; font-weight: 500; margin-bottom: 20px;">Редактировать отдел</p>
+        <form class="person" type="department">
+            {% csrf_token %}
+            <div class="input-names" style="height: 100%;">
+                <div>
+                    <label>Название{{form.department}}</label>
+                </div>
+            </div>
+            <div class="control-buttons" style="margin-top: 40px;">
+                <button type="submit" class="button">Сохранить</button>
+                <div class="button cancel">Отмена</div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="popup add-block product">
+    <div>
+        <p style="align-self: flex-start; font-size: 22px; font-weight: 500; margin-bottom: 20px;">Добавить проект</p>
+        <form class="person" type="product">
+            {% csrf_token %}
+            <div class="input-names" style="height: 100%;">
+                <div>
+                    <label>Название{{form.department}}</label>
+                </div>
+            </div>
+            <div class="control-buttons" style="margin-top: 40px;">
+                <button type="submit" class="button">Создать</button>
+                <div class="button cancel">Отмена</div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="popup edit-block product">
+    <div>
+        <p style="align-self: flex-start; font-size: 22px; font-weight: 500; margin-bottom: 20px;">Редактировать проект</p>
+        <form class="person" type="product">
+            {% csrf_token %}
+            <div class="input-names" style="height: 100%;">
+                <div>
+                    <label>Название{{form.department}}</label>
+                </div>
+            </div>
+            <div class="control-buttons" style="margin-top: 40px;">
+                <button type="submit" class="button">Сохранить</button>
+                <div class="button cancel">Отмена</div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="popup" id="remove-manager">
+    <div style="width: 270px; text-align: center;">
+        <p>Вы точно хотите удалить менеджера?</p>
+        <span style="font-size: 13px;">Вся статистика и звонки будут удалены</span>
+        <div class="call-stats-element-row">
+            <button type="submit" class="button remove confirm">Удалить</button>
+            <div class="button">Отмена</div>
+        </div>
+    </div>
+</div>
+<div class="popup" id="remove-department">
+    <div style="width: 270px; text-align: center;">
+        <p>Вы точно хотите удалить отдел?</p>
+        <span style="font-size: 13px;">Менеджеры останутся без отдела</span>
+        <div class="call-stats-element-row">
+            <button type="submit" class="button remove confirm">Удалить</button>
+            <div class="button">Отмена</div>
+        </div>
+    </div>
+</div>
+<div class="popup" id="remove-product">
+    <div style="width: 270px; text-align: center;">
+        <p>Вы точно хотите удалить проект?</p>
+        <span style="font-size: 13px;">Менеджеры останутся без проекта</span>
+        <div class="call-stats-element-row">
+            <button type="submit" class="button remove confirm">Удалить</button>
+            <div class="button">Отмена</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+document.querySelectorAll('.menu a')[5].classList.add('active'); // Добавление статуса "активный" к элементу меню
+const addBlock = document.querySelector('.add-block');
+const addForm = addBlock.querySelector('form');
+const editBlock = document.querySelector('.edit-block');
+const editForm = editBlock.querySelector('form');
+const removeManager = document.querySelector('#remove-manager');
+const removeDepartment = document.querySelector('#remove-department');
+const removeProduct = document.querySelector('#remove-product');
+const departments = eval('{{departments}}'.replace(/&#x27;/g, '\''));
+const products = eval('{{products}}'.replace(/&#x27;/g, '\''));
+let removing;
+let moveAfter;
+
+const setDepartments = () => {
+    let i = 0
+    document.querySelectorAll('form').forEach((form) => {
+        if (i > 1) return; i++;
+        const selects = form.querySelectorAll('select');
+        const productsBlock = form.querySelector('.products');
+        selects[0].querySelectorAll('option').forEach((option) => option.remove());
+        productsBlock.querySelectorAll('div').forEach((productContainer) => productContainer.remove());
+        departments.forEach((department) => {
+            const option = document.createElement('option');
+            option.value = department;
+            option.innerText = department;
+            selects[0].append(option);
+        });
+        products.forEach((product) => {
+            if (product === 'Не задан') return;
+            const productContainer = document.createElement('div');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = product;
+            const checkboxText = document.createElement('span');
+            checkboxText.innerText = product;
+            productContainer.append(checkbox);
+            productContainer.append(checkboxText);
+            productsBlock.append(productContainer);
+        });
+    });
+};
+
+window.onload = () => {
+    setDepartments();
+    createDepartmentProduct();
+    getData();
+};
+
+// Добавление менеджера
+const createManager = (managerIndex, update = false) => {
+    const manager = DarwinAI.managers[managerIndex];
+    const tr = update ? document.querySelector(`#managers-group .tr[data-id="${manager.id}"]`) : document.createElement('div');
+    if (!update) {
+        tr.classList.add('tr');
+        tr.setAttribute('data-id', manager.id);
+        for (let i = 0; i < 6; i++) {
+            const td = document.createElement('span');
+            td.classList.add('td');
+            tr.append(td);
+        }
+        document.querySelector('#managers-group').append(tr);
+    }
+    const tds = tr.querySelectorAll('span');
+    
+    const divImg = update? tds[0].querySelector('div') : document.createElement('div');
+    divImg.innerText = `${manager.first_name[0]}${manager.last_name[0]}`;
+    tds[1].innerText = `${manager.first_name} ${manager.last_name}`;
+    if (!update) {
+        divImg.classList.add('img-text');
+        tds[0].append(divImg);
+    }
+    tds[2].innerText = manager.department;
+    tds[3].innerText = '';
+    for (let i = 0; i < manager.product.length; i++) {
+        tds[3].innerText += (i > 0 ? ', ' : '') + manager.product[i];
+    }
+    tds[4].innerText = manager.status ? 'Активный' : 'Неактивный';
+    
+    if (!update) {
+        const linkEdit = document.createElement('img');
+        linkEdit.src = '{% static 'images/edit-manager.svg' %}';
+        linkEdit.addEventListener('click', () => {
+            editForm.setAttribute('data-id', DarwinAI.managers[managerIndex].id);
+            const inputs = editForm.querySelectorAll('input');
+            const selects = editForm.querySelectorAll('select');
+            const statusCheck = editForm.querySelector('.toggle-switch');
+            inputs[1].value = DarwinAI.managers[managerIndex].first_name;
+            inputs[2].value = DarwinAI.managers[managerIndex].last_name;
+            selects[0].value = DarwinAI.managers[managerIndex].department;
+            DarwinAI.managers[managerIndex].product.forEach((product) => {
+                if (product === 'Не задан') return;
+                editForm.querySelector(`.products input[value="${product}"]`).checked = true;
+            });
+            statusCheck.querySelector('input').checked = DarwinAI.managers[managerIndex].status;
+            statusCheck.querySelector('span').innerText = DarwinAI.managers[managerIndex].status ? 'Активный' : 'Неактивный';
+            editBlock.classList.add('active');
+        });
+        linkEdit.style.cursor = 'pointer';
+        tds[5].append(linkEdit);
+        tds[5].style.textAlign = 'center';
+        tds[5].style.width = '130px';
+    }
+    const departmentCount = departments.indexOf(manager.department);
+    const allManagers = document.querySelectorAll('#managers-group .tr');
+    moveAfter = allManagers[0];
+    for (let i = 1; i < allManagers.length; i++) {
+        if (allManagers[i] === tr) continue;
+        const idCompare = parseInt(allManagers[i].getAttribute('data-id'));
+        const departmentCompare = allManagers[i].querySelectorAll('.td')[2].innerText;
+        const departmentCompareCount = departments.indexOf(departmentCompare);
+        if (departmentCompareCount < departmentCount) moveAfter = allManagers[i];
+        else if (departmentCompareCount === departmentCount && idCompare < manager.id) moveAfter = allManagers[i];
+    }
+    moveAfter.insertAdjacentElement('afterend', tr);
+}
+
+// Добавление отделов и продуктов
+const createDepartmentProduct = () => {
+    document.querySelectorAll('#departments-group .tr:not(.table-headers)').forEach((departmentTr) => departmentTr.remove());
+    departments.forEach((department) => {
+        if (department === 'Не задан') return;
+        const tr = document.createElement('div');
+        tr.classList.add('tr');
+        tr.setAttribute('data-id', department);
+        for (let i = 0; i < 2; i++) {
+            const td = document.createElement('span');
+            td.classList.add('td');
+            tr.append(td);
+        }
+        document.querySelector('#departments-group').append(tr);
+        const tds = tr.querySelectorAll('span');
+        
+        tds[0].innerText = department;
+
+        const linkEdit = document.createElement('img');
+        linkEdit.src = '{% static 'images/edit-manager.svg' %}';
+        linkEdit.addEventListener('click', () => {
+            document.querySelectorAll('.edit-block.department input')[1].value = department;
+            removing = department;
+            document.querySelector('.edit-block.department').classList.add('active');
+        });
+        linkEdit.style.cursor = 'pointer';
+        linkEdit.style.marginRight = '10px';
+        const linkRemove = document.createElement('img');
+        linkRemove.src = '{% static 'images/remove-manager.svg' %}';
+        linkRemove.addEventListener('click', () => {
+            removing = department;
+            removeDepartment.style.display = 'initial';
+        });
+        linkRemove.style.cursor = 'pointer';
+        tds[1].append(linkEdit);
+        tds[1].append(linkRemove);
+        tds[1].style.textAlign = 'center';
+        tds[1].style.width = '130px';
+    });
+    document.querySelectorAll('#products-group .tr:not(.table-headers)').forEach((productTr) => productTr.remove());
+    products.forEach((product) => {
+        if (product === 'Не задан') return;
+        const tr = document.createElement('div');
+        tr.classList.add('tr');
+        tr.setAttribute('data-id', product);
+        for (let i = 0; i < 2; i++) {
+            const td = document.createElement('span');
+            td.classList.add('td');
+            tr.append(td);
+        }
+        document.querySelector('#products-group').append(tr);
+        const tds = tr.querySelectorAll('span');
+        
+        tds[0].innerText = product;
+
+        const linkEdit = document.createElement('img');
+        linkEdit.src = '{% static 'images/edit-manager.svg' %}';
+        linkEdit.addEventListener('click', () => {
+            document.querySelectorAll('.edit-block.product input')[1].value = product;
+            removing = product;
+            document.querySelector('.edit-block.product').classList.add('active');
+        });
+        linkEdit.style.cursor = 'pointer';
+        linkEdit.style.marginRight = '10px';
+        const linkRemove = document.createElement('img');
+        linkRemove.src = '{% static 'images/remove-manager.svg' %}';
+        linkRemove.addEventListener('click', () => {
+            removing = product;
+            removeProduct.style.display = 'initial';
+        });
+        linkRemove.style.cursor = 'pointer';
+        tds[1].append(linkEdit);
+        tds[1].append(linkRemove);
+        tds[1].style.textAlign = 'center';
+        tds[1].style.width = '130px';
+    });
+}
+
+// Закрытие попапа
+const closeBlock = (block) => {
+    block.classList.remove('active');
+    const inputsText = block.querySelectorAll('input[type="text"]');
+    const inputsCheck = block.querySelectorAll('input[type="checkbox"]');
+    inputsText.forEach((input) => input.value = '');
+    inputsCheck.forEach((input) => input.checked = false);
+};
+
+// Отправка формы
+const sendForm = (method, form, type) => {
+    const id = form.getAttribute('data-id') ? form.getAttribute('data-id') : '';
+    const inputs = form.querySelectorAll('input');
+    const selects = form.querySelectorAll('select');
+    const statusCheck = form.querySelector('.toggle-switch');
+    const firstName = inputs[1].value;
+    let lastName = '', department = '', product = '', status = '';
+    if (type === 'manager') {
+        lastName = inputs[2].value;
+        department = selects[0].value;
+        const products = [];
+        editForm.querySelectorAll('.products input').forEach((checkbox) => {
+            if (checkbox.checked) products.push(checkbox.value);
+        });
+        product = products.toString();
+        status = statusCheck ? statusCheck.querySelector('input').checked : '';
+    } else if (form.closest('.popup').classList.contains('edit-block')) lastName = removing;
+    postData(method, type, id, firstName, lastName, department, product, status);
+    closeBlock(form.closest('.popup'));
+};
+
+// Добавление необходимых eventListener
+const eventListeners = () => {
+    document.querySelector('#add-manager').addEventListener('click', () => {
+        addBlock.classList.add('active');
+    });
+    document.querySelector('#add-department').addEventListener('click', () => {
+        document.querySelector('.add-block.department').classList.add('active');
+    });
+    document.querySelector('#add-product').addEventListener('click', () => {
+        document.querySelector('.add-block.product').classList.add('active');
+    });
+    document.querySelectorAll('.popup').forEach((popup) => {
+        popup.addEventListener('click', (event) => {
+            if (event.target.classList.contains('popup')) closeBlock(popup);
+        });
+    });
+    addForm.querySelector('div.button').addEventListener('click', () => {
+        closeBlock(addBlock);
+    });
+    document.querySelector('.add-block.department div.button').addEventListener('click', () => {
+        closeBlock(document.querySelector('.add-block.department'));
+    });
+    document.querySelector('.edit-block.department div.button').addEventListener('click', () => {
+        closeBlock(document.querySelector('.edit-block.department'));
+    });
+    document.querySelector('.add-block.product div.button').addEventListener('click', () => {
+        closeBlock(document.querySelector('.add-block.product'));
+    });
+    document.querySelector('.edit-block.product div.button').addEventListener('click', () => {
+        closeBlock(document.querySelector('.edit-block.product'));
+    });
+    // Отправка формы на добавление или редактирование
+    document.querySelectorAll('.popup form').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const method = form.closest('.popup').classList.contains('add-block') ? 'add' : 'edit';
+            sendForm(method, form, form.getAttribute('type'));
+        });
+    });
+    // Удаление менеджера
+    editBlock.querySelector('.remove').addEventListener('click', (event) => {
+        closeBlock(editBlock);
+        removing = editForm.getAttribute('data-id');
+        removeManager.style.display = 'initial';
+    });
+    removeManager.querySelector('button').addEventListener('click', () => {
+        removeData('manager', removing);
+        removeManager.style.display = '';
+    });
+    removeManager.addEventListener('click', (event) => {
+        if (event.target.classList.contains('popup')) removeManager.style.display = '';
+    });
+    removeManager.querySelector('div.button').addEventListener('click', () => {
+        removeManager.style.display = '';
+    });
+    
+    removeDepartment.querySelector('button').addEventListener('click', () => {
+        removeData('department', removing);
+        removeDepartment.style.display = '';
+    });
+    removeDepartment.addEventListener('click', (event) => {
+        if (event.target.classList.contains('popup')) removeDepartment.style.display = '';
+    });
+    removeDepartment.querySelector('div.button').addEventListener('click', () => {
+        removeDepartment.style.display = '';
+    });
+    removeProduct.querySelector('button').addEventListener('click', () => {
+        removeData('product', removing);
+        removeProduct.style.display = '';
+    });
+    removeProduct.addEventListener('click', (event) => {
+        if (event.target.classList.contains('popup')) removeProduct.style.display = '';
+    });
+    removeProduct.querySelector('div.button').addEventListener('click', () => {
+        removeProduct.style.display = '';
+    });
+    editForm.querySelector('.toggle-switch input').addEventListener('change', (event) => {
+        editForm.querySelector('.toggle-switch span').innerText = event.target.checked ? 'Активный' : 'Неактивный';
+    });
+};
+
+// Удаление пользователя
+const removeData = async (url, data) => {
+    const response = await fetch(`delete/${url}/${data}/`, {
+        method: 'DELETE',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        if (url === 'department') {
+            departments.splice(departments.indexOf(data), 1);
+            for (let i = 0; i < DarwinAI.managers.length; i++) {
+                if (DarwinAI.managers[i].department === data) {
+                    DarwinAI.managers[i].department = 'Не задан';
+                    createManager(i, true);
+                }
+            }
+        } else if (url === 'product') {
+            products.splice(products.indexOf(data), 1);
+            for (let i = 0; i < DarwinAI.managers.length; i++) {
+                if (DarwinAI.managers[i].product.includes(data)) {
+                    DarwinAI.managers[i].product.splice(DarwinAI.managers[i].product.indexOf(data), 1);
+                    if (DarwinAI.managers[i].product.length === 0) DarwinAI.managers[i].product.push('Не задан');
+                    createManager(i, true);
+                }
+            }
+        }
+        document.querySelector(`#${url}s-group .tr[data-id="${data}"]`).remove();
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+
+// Отправка данных на сервер
+const postData = async (method, type, id = '', firstName = '', lastName = '', department = '', product = '', status = '') => {
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    formdata.append('method', method);
+    formdata.append('type', type);
+    formdata.append('id', id);
+    formdata.append('first_name', firstName);
+    formdata.append('last_name', lastName);
+    formdata.append('department', department);
+    formdata.append('product', product);
+    formdata.append('status', status);
+    const response = await fetch(`add/`, {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        if (method === 'add') {
+            if (type === 'manager') {
+                DarwinAI.managers.push(result);
+                createManager(DarwinAI.managers.length - 1);
+            } else {
+                if (type === 'department') departments.push(firstName);
+                else products.push(firstName);
+                setDepartments();
+                createDepartmentProduct();
+            }
+        } else {
+            if (type === 'manager') {
+                for (let i = 0; i < DarwinAI.managers.length; i++) {
+                    if (DarwinAI.managers[i].id === result.id) {
+                        DarwinAI.managers[i] = result;
+                        createManager(i, true);
+                    }
+                }
+            } else {
+                if (type === 'department') departments[departments.indexOf(lastName)] = firstName;
+                else products[products.indexOf(lastName)] = firstName;
+                setDepartments();
+                createDepartmentProduct();
+                for (let i = 0; i < DarwinAI.managers.length; i++) {
+                    if (type === 'department' && DarwinAI.managers[i].department === lastName) {
+                        DarwinAI.managers[i].department = firstName;
+                        createManager(i, true);
+                    }
+                    if (type === 'product' && DarwinAI.managers[i].product.includes(lastName)) {
+                        DarwinAI.managers[i].product[DarwinAI.managers[i].product.indexOf(lastName)] = firstName;
+                        createManager(i, true);
+                    }
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+
+// Получение менеджеров с сервера
+const getData = async () => {
+    const response = await fetch(`/managers-list/`)
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        fillGlobal(result);
+        for (let i = 0; i < DarwinAI.managers.length; i++) createManager(i);
+        eventListeners();
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+{% endblock %}

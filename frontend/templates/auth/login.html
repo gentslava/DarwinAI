@@ -1,0 +1,16 @@
+{% extends 'authorization.html' %}
+{% load static %}
+{% block form %}
+<h1>Sign in to access your dashboard</h1>
+<form method="post">
+    {% csrf_token %}
+    <div class="input">
+        <span class="icon-User"></span>{{form.login}}
+    </div>
+    <div class="input">
+        <span class="icon-Password"></span>{{form.password}}<span class="icon-Show"></span>
+    </div>
+    {{form.errors}}
+    <button type="submit">Log In</button>
+</form>
+{% endblock %}

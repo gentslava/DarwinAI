@@ -1,0 +1,21 @@
+.main-frame {
+    display: flex;
+    flex-direction: row;
+}
+
+.content {
+    width: 1110px;
+    overflow: visible;
+    min-height: 100vh;
+    margin: auto;
+    padding: 60px 0;
+    box-sizing: border-box;
+    flex-direction: column;
+
+    @media (min-width: 1440px) {
+        margin: 0 70px;
+        padding: 60px 95px;
+        width: 100%;
+        overflow: auto;
+    }
+}

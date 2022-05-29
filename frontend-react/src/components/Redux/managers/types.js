@@ -1,0 +1,1 @@
+export const UPDATE_MANAGERS = 'UPDATE_MANAGERS';

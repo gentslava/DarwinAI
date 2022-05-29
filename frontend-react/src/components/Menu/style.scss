@@ -1,0 +1,54 @@
+.menu {
+    width: 70px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: #190041;
+    position: fixed;
+    text-align: center;
+    z-index: 999;
+
+    & > * {
+        margin: 15px;
+        font-size: 11px;
+    }
+
+    a {
+        color: #cacaca;
+        text-decoration: none;
+        margin: 0;
+
+        * {
+            color: #cacaca;
+        }
+
+        &:hover,
+        &.active,
+        &:hover *,
+        &.active * {
+            color: #fff;
+        }
+    }
+
+    .head {
+        display: inherit;
+        flex-direction: inherit;
+        align-items: center;
+
+        * {
+            margin-bottom: 20px;
+        }
+
+        p {
+            margin: 0;
+            margin-bottom: 3px;
+
+            &#logo {
+                color: #fff;
+                margin-bottom: 40px;
+                font-size: 40px;
+            }
+        }
+    }
+}

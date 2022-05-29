@@ -1,0 +1,199 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="head">
+    <div class="nav-prev">
+        <h1>Настройка словарей</h1>
+    </div>
+    <div class="call-summary"></div>
+</div>
+<div class="body">
+    <div class="dictionaries">
+        <div class="call-stats-element-row">
+            <span class="active">Словари менеджера</span>
+            <span>Словари клиента</span>
+        </div>
+        <div class="call-stats-element-row active">
+            <div class="call-stats-element split-3 dictionary" id="crit">
+                <p>Критичные слова</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {{form}}
+                    <button type="submit" name="operator_crit_form">+</button>
+                </form>
+                <div class="words"></div>
+            </div>
+            <div class="call-stats-element split-3 dictionary" id="neg">
+                <p>Нежелательные слова</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {{form}}
+                    <button type="submit" name="operator_neg_form">+</button>
+                </form>
+                <div class="words"></div>
+            </div>
+            <div class="call-stats-element split-3 dictionary" id="par">
+                <p>Слова-паразиты</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {{form}}
+                    <button type="submit" name="operator_par_form">+</button>
+                </form>
+                <div class="words"></div>
+            </div>
+        </div>
+        <div class="call-stats-element-row">
+            <div class="call-stats-element split-3 dictionary" id="client_pos">
+                <p>Ваши услуги и товары, интересующие клиента</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {{form}}
+                    <button type="submit" name="client_pos_form">+</button>
+                </form>
+                <div class="words"></div>
+            </div>
+            <div class="call-stats-element split-3 dictionary" id="client_neg" style="margin-right: 0;">
+                <p>Ответы клиента на ваши предложения</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {{form}}
+                    <button type="submit" name="client_neg_form">+</button>
+                </form>
+                <div class="words"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+document.querySelectorAll('.menu a')[4].classList.add('active');
+const forms = document.querySelectorAll('form');
+const tabs = document.querySelector('.dictionaries div').querySelectorAll('span');
+const tabBodys = document.querySelectorAll('.dictionaries > div:not(:first-child)');
+
+window.onload = () => {
+    getData();
+    eventListeners();
+};
+
+const appendEmptyWords = (block) => {
+    const emptyWords = document.createElement('p');
+    emptyWords.style = "font-size: 14px; font-weight: 400;";
+    emptyWords.innerText = 'фразы не заданы';
+    emptyWords.classList.add('empty');
+    block.append(emptyWords);
+};
+
+const showData = (word, type, action) => {
+    if (type === -1) return;
+    const block = forms[type].closest('div');
+    if (action === 'add') {
+        const buttonWord = document.createElement('div');
+        buttonWord.classList.add('word', 'button');
+        buttonWord.innerText = `${word} `;
+        const spanButton = document.createElement('span');
+        spanButton.innerText = '–';
+        buttonWord.append(spanButton);
+        const emptyWords = block.querySelectorAll('p')[2];
+        if (emptyWords) emptyWords.remove();
+        block.querySelector('div').append(buttonWord);
+        spanButton.addEventListener('click', () => {
+            const button = buttonWord.closest('div.call-stats-element').querySelector('button');
+            postData(word, button.name, 'remove');
+        });
+        if (block.querySelector('.empty')) block.querySelector('.empty').remove();
+    } else {
+        const buttons = block.querySelectorAll('.word');
+        const length = buttons.length;
+        for (let i = 0; i < length; i++) {
+            if (buttons[i].innerText.slice(0,-1).trim() === word) {
+                buttons[i].remove();
+                if (length === 1) appendEmptyWords(block);
+                return;
+            }
+        }
+    }
+};
+
+const eventListeners = () => {
+    forms.forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const input = form.querySelector('input[type="text"]');
+            const word = input.value.trim().replace(/  /g, ' ');
+            input.value = '';
+            const button = form.querySelector('button');
+            postData(word, button.name, 'add');
+        });
+    });
+    // Переключение вкладок
+    tabs[0].addEventListener('click', () => {
+        tabs[1].classList.remove('active');
+        tabs[0].classList.add('active');
+        tabBodys[1].classList.remove('active');
+        tabBodys[0].classList.add('active');
+    });
+    tabs[1].addEventListener('click', () => {
+        tabs[0].classList.remove('active');
+        tabs[1].classList.add('active');
+        tabBodys[0].classList.remove('active');
+        tabBodys[1].classList.add('active');
+    });
+};
+
+const postData = async (word, name, action) => {
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    formdata.append('word', word);
+    formdata.append('name', name);
+    formdata.append('action', action);
+    const response = await fetch('/dictionaries/', {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        showData(result.word, result.type, result.action);
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+
+const getData = async () => {
+    const response = await fetch('words-list/')
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        fillGlobal(result);
+        if (DarwinAI.crit_words.length === 0) appendEmptyWords(forms[0].closest('div'));
+        if (DarwinAI.neg_words.length === 0) appendEmptyWords(forms[1].closest('div'));
+        if (DarwinAI.par_words.length === 0) appendEmptyWords(forms[2].closest('div'));
+        if (DarwinAI.client_pos_words.length === 0) appendEmptyWords(forms[3].closest('div'));
+        if (DarwinAI.client_neg_words.length === 0) appendEmptyWords(forms[4].closest('div'));
+        for (let i = 0; i < DarwinAI.crit_words.length; i++) showData(DarwinAI.crit_words[i], 0, 'add');
+        for (let i = 0; i < DarwinAI.neg_words.length; i++) showData(DarwinAI.neg_words[i], 1, 'add');
+        for (let i = 0; i < DarwinAI.par_words.length; i++) showData(DarwinAI.par_words[i], 2, 'add');
+        for (let i = 0; i < DarwinAI.client_pos_words.length; i++) showData(DarwinAI.client_pos_words[i], 3, 'add');
+        for (let i = 0; i < DarwinAI.client_neg_words.length; i++) showData(DarwinAI.client_neg_words[i], 4, 'add');
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+{% endblock %}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>DarwinAI</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/font.css' %}">
+</head>
+<body>
+    <div class="login">
+        <img src="{% static 'images/logo.png' %}" alt="Logo">
+        {% block form %}
+        {% endblock %}
+    </div>
+    <script>
+        const passwordField = document.querySelector('input[name="password"]');
+        document.querySelector('.input .icon-Show').addEventListener('mousedown', (event) => {
+            passwordField.type = 'text';
+        });
+        document.querySelector('.input .icon-Show').addEventListener('mouseup', (event) => {
+            passwordField.type = 'password';
+            passwordField.focus();
+        });
+    </script>
+</body>
+</html>

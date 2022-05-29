@@ -1,0 +1,86 @@
+.table {
+    display: table;
+    width: 100%;
+    margin-top: 80px;
+    overflow-y: auto;
+    box-sizing: border-box;
+
+    .tr {
+        display: table-row;
+        height: 75px;
+        position: relative;
+
+        * {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+        &.seen {
+            opacity: 0.6;
+        }
+
+        &.table-headers {
+            border-radius: 4px;
+            background: #6100ff0a;
+        }
+
+        &:hover {
+            background: #f3f3f3;
+        }
+
+        .th,
+        .td {
+            display: table-cell;
+            padding: 22px 10px;
+        }
+
+        .th {
+            cursor: pointer;
+            vertical-align: middle;
+            position: relative;
+            font-weight: 400;
+            user-select: none;
+            -webkit-user-select: none;
+
+            &.sorting {
+                font-weight: 600;
+
+                .icon-Down {
+                    display: initial;
+                }
+            }
+
+            .icon-Down {
+                font-size: 8px;
+                position: absolute;
+                top: 50%;
+                margin-top: -2px;
+                margin-left: 5px;
+                color: #00000080;
+                display: none;
+            }
+
+            &:nth-child(1) {
+                cursor: auto;
+            }
+        }
+
+        .td {
+            border-bottom: 1px solid #ddd;
+            position: relative;
+
+            &:nth-child(2) {
+                text-align: left;
+                width: 20%;
+                word-break: break-word;
+            }
+        }
+    }
+
+    .lds-ring {
+        display: table-cell;
+        padding-top: 30px;
+    }
+}

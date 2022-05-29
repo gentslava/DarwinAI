@@ -1,0 +1,326 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="head">
+    <div class="nav-prev">
+        <h1>Настройки</h1>
+    </div>
+    <div class="call-summary"></div>
+</div>
+<div class="body">
+    <div style="width: fit-content;">
+        <div class="call-stats-element settings">
+            <p style="margin-bottom: 50px;">Настройка отображения общих параметров в детализации звонка</p>
+            <div class="call-stats-element-row" id="hsv">
+                <p>Отображение объема речи</p>
+                <select>
+                    <option value="F">Включено</option>
+                    <option value="T">Отключено</option>
+                </select>
+            </div><div class="call-stats-element-row" id="hsf">
+                <p>Отображение выполнения скрипта</p>
+                <select>
+                    <option value="F">Включено</option>
+                    <option value="T">Отключено</option>
+                </select>
+            </div><div class="call-stats-element-row" id="hlp">
+                <p>Отображение подстройки по громкости</p>
+                <select>
+                    <option value="F">Включено</option>
+                    <option value="T">Отключено</option>
+                </select>
+            </div><div class="call-stats-element-row" id="hsp">
+                <p>Отображение подстройки по скорости</p>
+                <select>
+                    <option value="F">Включено</option>
+                    <option value="T">Отключено</option>
+                </select>
+            </div><div class="call-stats-element-row" id="hspu">
+                <p>Отображение чистоты речи</p>
+                <select>
+                    <option value="F">Включено</option>
+                    <option value="T">Отключено</option>
+                </select>
+            </div><div class="call-stats-element-row" id="hi">
+                <p>Отображение перебиваний</p>
+                <select>
+                    <option value="F">Включено</option>
+                    <option value="T">Отключено</option>
+                </select>
+            </div><div class="call-stats-element-row" id="hcw">
+                <p>Отображение критичных слов</p>
+                <select>
+                    <option value="F">Включено</option>
+                    <option value="T">Отключено</option>
+                </select>
+            </div><div class="call-stats-element-row" id="hnw">
+                <p>Отображение нежелательных слов</p>
+                <select>
+                    <option value="F">Включено</option>
+                    <option value="T">Отключено</option>
+                </select>
+            </div><div class="call-stats-element-row" id="hpc">
+                <p>Отображение % позитива в диалоге</p>
+                <select>
+                    <option value="F">Включено</option>
+                    <option value="T">Отключено</option>
+                </select>
+            </div>
+            <div class="call-stats-element-row" id="hnc">
+                <p>Отображение % негатива в диалоге</p>
+                <select>
+                    <option value="F">Включено</option>
+                    <option value="T">Отключено</option>
+                </select>
+            </div>
+        </div>
+        <div class="call-stats-element settings">
+            <p style="margin-bottom: 50px;">Настройки параметров критического звонка</p>
+            <div class="call-stats-element-row" id="cnec">
+                <p>Объем негативных эмоций клиента</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                </select>
+                <input type="number" min="0" max="100" disabled>
+                <span>%</span>
+            </div>
+            <div class="call-stats-element-row" id="cneo">
+                <p>Объем негативных эмоций менеджера</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                </select>
+                <input type="number" min="0" max="100" disabled>
+                <span>%</span>
+            </div>
+            <div class="call-stats-element-row" id="csv">
+                <p>Объем речи менеджера</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                    <option value="<">Менее</option>
+                </select>
+                <input type="number" min="0" max="100" disabled>
+                <span>%</span>
+            </div>
+            <div class="call-stats-element-row" id="csf">
+                <p>Выполнение менеджером скрипта</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value="<">Менее</option>
+                </select>
+                <input type="number" min="0" max="100" disabled>
+                <span>%</span>
+            </div>
+            <div class="call-stats-element-row" id="clp">
+                <p>Подстройка менеджера по громкости</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value="<">Менее</option>
+                </select>
+                <input type="number" min="0" max="100" disabled>
+                <span>%</span>
+            </div>
+            <div class="call-stats-element-row" id="csp">
+                <p>Подстройка менеджера по скорости речи</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value="<">Менее</option>
+                </select>
+                <input type="number" min="0" max="100" disabled>
+                <span>%</span>
+            </div>
+            <div class="call-stats-element-row" id="cspu">
+                <p>Чистота речи менеджера</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value="<">Менее</option>
+                </select>
+                <input type="number" min="0" max="100" disabled>
+                <span>%</span>
+            </div>
+            <div class="call-stats-element-row" id="cial" style="margin-top: 40px;">
+                <p>Общее количество перебиваний</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                </select>
+                <input type="number" min="0" disabled>
+                <span>раз</span>
+            </div>
+            <div class="call-stats-element-row" id="ciav">
+                <p>Среднее количество перебиваний</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                </select>
+                <input type="number" min="0" disabled>
+                <span>раз в</span>
+                <input type="number" min="0" disabled>
+                <span>минут</span>
+            </div>
+            <div class="call-stats-element-row" id="ccwal" style="margin-top: 40px;">
+                <p>Общее количество критичных слов</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                </select>
+                <input type="number" min="0" disabled>
+                <span>раз</span>
+            </div>
+            <div class="call-stats-element-row" id="ccwav">
+                <p>Среднее количество критичных слов</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                </select>
+                <input type="number" min="0" disabled>
+                <span>раз в</span>
+                <input type="number" min="0" disabled>
+                <span>минут</span>
+            </div>
+            <div class="call-stats-element-row" id="cnwal" style="margin-top: 40px;">
+                <p>Общее количество нежелательных слов</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                </select>
+                <input type="number" min="0" disabled>
+                <span>раз</span>
+            </div>
+            <div class="call-stats-element-row" id="cnwav">
+                <p>Среднее количество нежелательных слов</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                </select>
+                <input type="number" min="0" disabled>
+                <span>раз в</span>
+                <input type="number" min="0" disabled>
+                <span>минут</span>
+            </div>
+            <div class="call-stats-element-row" id="chcal" style="margin-top: 40px;">
+                <p>Общее количество online подсказок менеджеру</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                </select>
+                <input type="number" min="0" disabled>
+                <span>раз</span>
+            </div>
+            <div class="call-stats-element-row" id="chcav">
+                <p>Среднее количество online подсказок менеджеру</p>
+                <select>
+                    <option value="‒">Не задано</option>
+                    <option value=">">Более</option>
+                </select>
+                <input type="number" min="0" disabled>
+                <span>раз в</span>
+                <input type="number" min="0" disabled>
+                <span>минут</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+document.querySelectorAll('.menu a')[2].classList.add('active');
+const settingBlocks = document.querySelectorAll('.settings div');
+const settingsProps = [
+'{{hsv}}', '{{hsf}}', '{{hlp}}', '{{hsp}}', '{{hspu}}', '{{hi}}', '{{hcw}}', '{{hnw}}', '{{hpc}}', '{{hnc}}',
+'{{cnec}}', '{{cneo}}', '{{csv}}', '{{csf}}', '{{clp}}', '{{csp}}', '{{cspu}}', '{{cial}}', '{{ciav}}', '{{ccwal}}', '{{ccwav}}', '{{cnwal}}', '{{cnwav}}', '{{chcal}}', '{{chcav}}'
+];
+
+window.onload = () => {
+    showSettings();
+    eventListeners();
+};
+
+const showSettings = () => {
+    for (let i = 0; i < settingsProps.length; i++) {
+        settingsProps[i] = settingsProps[i].replace('&gt;', '>').replace('&lt;', '<');
+        const block = settingBlocks[i];
+        block.querySelector('select').value = settingsProps[i].charAt(0);
+        if (settingsProps[i] !== '‒' && settingsProps[i] !== 'True') {
+            block.classList.add('enabled');
+            const inputs = block.querySelectorAll('input');
+            const values = settingsProps[i].slice(1).split('/');
+            for (let j = 0; j < inputs.length; j++) {
+                inputs[j].disabled = false;
+                inputs[j].value = values[j];
+            }
+        }
+    }
+};
+
+const eventListeners = () => {
+    for (let i = 0; i < settingBlocks.length; i++) {
+        const block = settingBlocks[i];
+        block.querySelector('select').addEventListener('change', (event) => {
+            let value = event.target.value;
+            if (value === '‒' || value === 'T') {
+                block.querySelectorAll('input').forEach((input) => {
+                    input.disabled = true;
+                    input.value = '';
+                });
+                block.classList.remove('enabled');
+                postData(block.id, value, settingsProps[i]);
+                settingsProps[i] = value;
+            } else {
+                block.classList.add('enabled');
+                const inputs = block.querySelectorAll('input');
+                value += inputs.length > 0 ? inputs[0].value + (inputs.length === 2 ? `/${inputs[1].value}` : '') : '';
+                for (let j = 0; j < inputs.length; j++) {
+                    inputs[j].disabled = false;
+                    if (inputs[j].value === '') value = '‒';
+                }
+                postData(block.id, value, settingsProps[i]);
+                settingsProps[i] = value;
+            }
+        });
+        const inputs = block.querySelectorAll('input');
+        inputs.forEach((input) => {
+            input.addEventListener('change', () => {
+                if (input.value < 0 || (['cnec', 'cneo', 'csv', 'csf', 'clp', 'csp', 'cspu'].includes(block.id) && input.value > 100)) return;
+                const operator = block.querySelector('select').value;
+                if (operator === '‒') return;
+                const inputs = block.querySelectorAll('input');
+                let value = operator + inputs[0].value + (inputs.length === 2 ? `/${inputs[1].value}` : '');
+                for (let j = 0; j < inputs.length; j++) if (inputs[j].value === '') value = '‒';
+                postData(block.id, value, settingsProps[i]);
+                settingsProps[i] = value;
+            });
+        });
+    }
+};
+
+const postData = async (name, value, oldValue) => {
+    if (value === oldValue) return;
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    formdata.append('name', name);
+    formdata.append('value', value);
+    const response = await fetch('/settings/', {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+{% endblock %}

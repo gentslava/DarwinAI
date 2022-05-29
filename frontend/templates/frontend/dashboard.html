@@ -1,0 +1,88 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="head">
+    <div class="nav-prev">
+        <h1>Darwin AI</h1>
+    </div>
+    <div class="balance">
+        <p style="font-weight: 500; margin: 0;">Баланс</p>
+        <p style="margin: 5px 0 0;">{{balance}} (минуты)</p>
+    </div>
+</div>
+<div class="body">
+    <div style="position: relative;">
+        <div class="table dashboard" id="calls">
+            <span style="display: block; margin-top: -50px; margin-bottom: 30px;">Критические звонки</span>
+            <div class="tr table-headers">
+                <span class="th" orderName="operator-order">Оператор</span>
+                <span class="th" orderName="call-order">Звонок</span>
+                <span class="th" orderName="volume-order">Объем речи<span class="icon-Down"></span></span>
+                <span class="th" orderName="script-order">Соответствие скрипту<span class="icon-Down"></span></span>
+                <span class="th" orderName="loud-order">Подстройка по громкости<span class="icon-Down"></span></span>
+                <span class="th" orderName="speed-order">Подстройка по скорости<span class="icon-Down"></span></span>
+                <span class="th" orderName="purity-order">Чистота речи<span class="icon-Down"></span></span>
+                <span class="th" orderName="interseptions-order">Перебивания<span class="icon-Down"></span></span>
+                <span class="th" orderName="crit_words-order">Критичные слова<span class="icon-Down"></span></span>
+                <span class="th" orderName="neg_words-order">Нежелательные слова<span class="icon-Down"></span></span>
+                <span class="th" orderName="negative-order">Негатив в диалоге<br>оператор | клиент<span class="icon-Down"></span></span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+document.querySelectorAll('.menu a')[0].classList.add('active');
+const calls = document.querySelector('#calls');
+
+window.onload = () => {
+    document.body.style.background = 'top/cover url("{% static 'images/dashboard-bg.png' %}")';
+    getData();
+};
+
+const showData = () => {
+    Object.keys(DarwinAI.critical_calls).forEach(i => {
+        const record = DarwinAI.critical_calls[i];
+        const tr = document.createElement('a');
+        tr.classList.add('tr');
+        tr.classList.add('call');
+        if (recordsSeen.includes(record.id)) tr.classList.add('seen');
+        for (let j = 0; j < 11; j++) {
+            const td = document.createElement('span');
+            td.classList.add('td');
+            tr.append(td);
+        }
+        const td = tr.children;
+        td[0].innerText = record.manager;
+        td[1].innerHTML = record.name;
+        td[2].innerHTML = `<img src="/static/images/${record.volume ? 'galochka' : 'krestik'}.svg">`;
+        td[3].innerHTML = `<img src="/static/images/${record.script_following ? 'galochka' : 'krestik'}.svg">`;
+        td[4].innerHTML = `<img src="/static/images/${record.loud_control ? 'galochka' : 'krestik'}.svg">`;
+        td[5].innerHTML = `<img src="/static/images/${record.speed_control ? 'galochka' : 'krestik'}.svg">`;
+        td[6].innerHTML = `<img src="/static/images/${record.speech_purity ? 'galochka' : 'krestik'}.svg">`;
+        td[7].innerHTML = `<img src="/static/images/${record.interceptions ? 'galochka' : 'krestik'}.svg">`;
+        td[8].innerHTML = `<img src="/static/images/${record.crit_words ? 'galochka' : 'krestik'}.svg">`;
+        td[9].innerHTML = `<img src="/static/images/${record.neg_words ? 'galochka' : 'krestik'}.svg">`;
+        td[10].innerHTML = `<img src="/static/images/${record.emotional_negative_operator ? 'galochka' : 'krestik'}.svg">&nbsp; | &nbsp;<img src="/static/images/${record.emotional_negative_client ? 'galochka' : 'krestik'}.svg">`;
+        tr.href = record.path;
+        calls.append(tr);
+    });
+};
+
+const getData = async () => {
+    const response = await fetch(`/critical-calls/`)
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        fillGlobal(result);
+        showData();
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+{% endblock %}

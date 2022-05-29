@@ -1,0 +1,1166 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="head">
+    <div class="nav-prev">
+        <a href="" id="back">
+            <p class="icon-Back"></p>
+        </a>
+        <h1>Детализация звонка</h1>
+    </div>
+    <div class="call-summary"></div>
+    <a href="" id="real-time" style="text-decoration: none;"><div class="button yellow" style="background: #00b3a6; color: white;">Online коучинг</div></a>
+</div>
+<div class="body">
+    <div id="name">{{filename}}</div>
+    <div class="call">
+        <div class="record" style="position: relative;">
+            <div class="players">
+                <div class="emotional">
+                    <div class="timeline">
+                        <div class="operator">
+                            <span style="position: absolute; margin-top: -16px; font-size: 12px; color: #000; z-index: -1">Менеджер</span>
+                        </div>
+                        <div class="client">
+                            <span style="position: absolute; margin-top: -16px; font-size: 12px; color: #6200ee; z-index: -1">Клиент</span>
+                        </div>
+                        <input type="range" id="seek-slider" max="" value="0" style="visibility: hidden;">
+                    </div>
+                </div>
+                <div class="timeline" style="justify-content: space-between;">
+                    <div class="controller">
+                        <div class="play-pause">
+                            <button id="play-pause-button" onclick="toggle()"></button>
+                        </div>
+                        <span id="current-time" class="time" style="margin-left: 22px;">00:00</span>
+                        <span id="separator" class="time">/</span>
+                        <span id="duration" class="time" style="margin-right: 22px;">00:00</span>
+                        <div id="speedx" class="button" style="margin-right: 10px;">1.5x</div>
+                        <div id="rotate" class="button"><span class="icon-Rotate" style="font-size: 18px; vertical-align: middle; color: #6100ff;"></span> Сменить каналы</div>
+                    </div>
+                    <div class="controller">
+                        <div class="button active" id="emotions">Эмоции</div>
+                        <div class="button" id="scripts" style="display:{{hsf}}"><span style="position: absolute; margin-left: -20px; margin-top: 5px; border-top: 10px solid #0075ff; border-left: 7px solid transparent; border-right: 7px solid transparent;"></span>Скрипт</div>
+                        <div class="button" id="clearfy" style="display:{{hspu}}"><span style="position: absolute; margin-left: -20px; margin-top: 5px; border-top: 10px solid #ffa245; border-left: 7px solid transparent; border-right: 7px solid transparent;"></span>Чистота речи</div>
+                        <div class="button" id="intersept" style="display:{{hi}}"><span style="position: absolute; margin-left: -20px; margin-top: 5px; border-top: 10px solid #f43362; border-left: 7px solid transparent; border-right: 7px solid transparent;"></span>Перебивания</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <audio id="audio" preload="metadata" src="/media/records/{{path}}{{name}}"></audio>
+    </div>
+    <div class="popup" id="progress" style="display: block;">
+        <span class="icon-Updating"><span class="path1"></span><span class="path2"></span></span>
+    </div>
+    <div class="call-stats-element-row" style="margin-right: 10px;">
+        <div class="call-stats-element" style="padding: 10px 20px;">
+            <table class="calls" id="statistics">
+                <tr>
+                    <th style="display:{{hsv}}">Объем<br>речи</th>
+                    <th style="display:{{hsf}}">Выполнение<br>скрипта</th>
+                    <th style="display:{{hsp}}">Подстройка<br>по скорости</th>
+                    <th style="display:{{hlp}}">Подстройка<br>по громкости</th>
+                    <th style="display:{{hi}}">Перебивания</th>
+                    <th style="display:{{hspu}}">Чистота<br>речи</th>
+                    <th style="display:{{hcw}}">Критичные<br>слова</th>
+                    <th style="display:{{hnw}}">Нежелательные<br>слова</th>
+                    <th style="display:{{hpc}}">Позитив в диалоге<br>менеджер | клиент</th>
+                    <th style="display:{{hnc}}">Негатив в диалоге<br>менеджер | клиент</th>
+                </tr>
+                <tr>
+                    <td style="display:{{hsv}}">‒</td>
+                    <td style="display:{{hsf}}">‒</td>
+                    <td style="display:{{hsp}}">‒</td>
+                    <td style="display:{{hlp}}">‒</td>
+                    <td style="display:{{hi}}">‒</td>
+                    <td style="display:{{hspu}}">‒</td>
+                    <td style="display:{{hcw}}">‒</td>
+                    <td style="display:{{hnw}}">‒</td>
+                    <td style="display:{{hpc}}">‒ | ‒</td>
+                    <td style="display:{{hnc}}">‒ | ‒</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="call-stats-element-row">
+        <div class="split" style="width: calc(60% + 50px);">
+            <div class="call-stats-element-row">
+                <div class="call-stats-element" id="emotional-speech-to-text" style="padding-top: 0;">
+                    <div class="call-stats-element-row block-header sticky">
+                        <p>Транскрибация</p>
+                        <a href="" id="export" download>
+                            <img src={% static 'images/export.svg' %} style="cursor: pointer;">
+                        </a>
+                    </div>
+                    <div class="call-stats-element-content" style="margin-top: 5px; margin-right: -15px; position: relative;">
+                        <table class="calls"></table>
+                    </div>
+                    <div id="main-menu" class="context-menu">
+                        <div class="item" id="edit-text">Редактировать текст...</div>
+                        <div class="item" id="remove-text">Удалить фразу</div>
+                        <div class="item" id="edit-emotion">Редактировать эмоции <span class="icon-Right"></span>
+                            <div id="sub-menu" class="context-menu">
+                                <div class="item" id="edit-positive">Позитивные</div>
+                                <div class="item" id="edit-negative">Негативные</div>
+                                <div class="item" id="edit-neutral">Нейтральные</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="call-stats-element-row">
+                <div class="split" style="width: 50%;">
+                    <div class="call-stats-element" style="max-height: unset; height: calc(100% - 40px);">
+                        <div class="block-header">
+                            <p>Анализ слов менеджера</p>
+                        </div>
+                        <div id="crit" style="margin-right: auto; width: 100%;">    
+                            <div style="display: flex; justify-content: space-between;">
+                                <div>Критичные слова</div>
+                                <span class="count round" style="border-color: #b00020;">‒</span>
+                            </div>
+                        </div>
+                        <div id="neg" style="margin-right: auto; width: 100%;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <div>Нежелательные слова</div>
+                                <span class="count round" style="border-color: #ff006b;">‒</span>
+                            </div>
+                        </div>
+                        <div id="par" style="margin-right: auto; width: 100%;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <div>Слова-паразиты</div>
+                                <span class="count round" style="border-color: #ffa245;">‒</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="split" style="width: 50%;">
+                    <div class="call-stats-element" style="max-height: unset; height: calc(100% - 40px);">
+                        <div class="block-header">
+                            <p>Анализ слов клиента</p>
+                        </div>
+                        <div id="client_pos" style="margin-right: auto; width: 100%;">    
+                            <div style="display: flex; justify-content: space-between;">
+                                <div>Услуги и товары, интересующие клиента</div>
+                                <span class="count round" style="border-color: #01b962;">‒</span>
+                            </div>
+                        </div>
+                        <div id="client_neg" style="margin-right: auto; width: 100%;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <div>Ответы клиента на ваши предложения</div>
+                                <span class="count round" style="border-color: #6100ff;">‒</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="split">
+            <div class="call-stats-element" id="script" style="max-height: unset; height: calc(100% - 237px);">
+                <div class="call-stats-element-row block-header" style="margin-bottom: 25px; position: relative;">
+                    <p style="margin-top: 3px;">Скрипты</p>
+                    <a href="" id="export-script" style="position: absolute; right: 50px;" download>
+                        <img src={% static 'images/export.svg' %} style="cursor: pointer;">
+                    </a>
+                    <span class="count round">‒</span>
+                </div>
+            </div>
+            <div class="call-stats-element" id="profile">
+                <div class="block-header">
+                    <p>Профиль клиента</p>
+                </div>
+                <div class="call-stats-element-row" style="text-align: center; justify-content: center; width: 330px; margin: 10px auto;">
+                    <span style="font-size: 14px; color: #606060;">Недостаточно данных<br><span style="margin-top: 5px; font-size: 13px; color: #707070;">Не хватает данных для анализа и выявлявления профиля клиента</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="popup">
+    <div style="padding: 30px 50px;">
+        <p style="font-weight: 500;">Редактирование текста</p>
+        <span style="font-size: 12px; color: #bb86fc;">Исходный текст</span>
+        <p style="margin-top: 0; font-size: 14px;"></p>
+        <span style="font-size: 12px; color: #bb86fc;">Исправленный текст</span>
+        <p style="margin-top: 0; font-size: 14px;"><textarea oninput="resizeTextArea(this)"></textarea></p>
+        <div class="call-stats-element-row">
+            <div class="play-pause-fragment" style="margin-right: 10px;">
+                <button id="play-pause-button-fragment" onclick="toggleFragment()"></button>
+            </div>
+            <span style="align-self: center; color: #707070; font-size: 12px;">Прослушать фрагмент</span>
+        </div>
+        <div class="call-stats-element-row">
+            <button type="submit" class="button">Обновить</button>
+            <div class="button">Отмена</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+document.querySelectorAll('.menu a')[1].classList.add('active');
+const managerPath = `/${window.location.pathname.split('/')[1]}`;
+const startLoading = new Date().getTime();
+document.querySelector('#back').href = `${managerPath}/calls/`;
+document.querySelector('#real-time').href = `${managerPath}/real_time/{{path}}`;
+document.querySelector('#export').href = `/export/calls/{{path}}/{{filename}}.csv`;
+let timer;
+let width;
+let isPlaying = false;
+const audioPlayer = document.querySelector('#audio');
+const operatorSlider = document.querySelector('.emotional .operator');
+const clientSlider = document.querySelector('.emotional .client');
+const controllerSlider = document.querySelector('#seek-slider');
+const emotionalSpeechText = document.querySelector('#emotional-speech-to-text');
+const currentTime = document.querySelector('#current-time');
+const scriptBlock = document.querySelector('#script');
+const critBlock = document.querySelector('#crit');
+const negBlock = document.querySelector('#neg');
+const parBlock = document.querySelector('#par');
+const clientPosBlock = document.querySelector('#client_pos');
+const clientNegBlock = document.querySelector('#client_neg');
+const clearfy = document.querySelector('#clearfy');
+const intersept = document.querySelector('#intersept');
+const scriptSaid = document.querySelector('#scripts');
+const emotions = document.querySelector('#emotions');
+const sliderPos = operatorSlider.getBoundingClientRect().x;
+const speedxButton = document.querySelector('#speedx');
+const contextMenu = document.querySelector('#main-menu');
+const contextSubMenu = document.querySelector('#sub-menu');
+const editText = document.querySelectorAll('.popup')[1];
+const phraseTimings = new Map();
+let mouseOver = false;
+let activeSpeech = new Map();
+let activeTime = '';
+let startPos;
+let elementContext;
+const triangles = [];
+const loudTime = [];
+const additionalTime = [];
+const emotionsTime = [];
+let dualChannel = false;
+const maxLoud = 70;
+const maxSpeed = 2000;
+let oldAudioPos;
+let reverse = '{{reverse}}' === 'True';
+let channel0 = reverse ? 'client' : 'operator';
+let channel1 = reverse ? 'operator' : 'client';
+countClicks = new Map();
+keyPhrases = new Map();
+
+// Добавление просмотренного звонка в cookie
+const addToCookie = () => {
+    const id = {{id}};
+    const cookie = getCookie('recordsSeen');
+    let cookieArr;
+    if (cookie === undefined) {
+        cookieArr = [id];
+    } else {
+        cookieArr = JSON.parse(cookie);
+        if (!cookieArr.includes(id)) cookieArr.push(id);
+    }
+    const json_str = JSON.stringify(cookieArr);
+    setCookie('recordsSeen', json_str);
+};
+
+window.onload = () => {
+    width = controllerSlider.getBoundingClientRect().width;
+    controllerSlider.max = width;
+    if (duration > 200) {
+        width *= duration / 200;
+        controllerSlider.style.width = `${width}px`;
+        operatorSlider.style.width = `${width}px`;
+        clientSlider.style.width = `${width}px`;
+        controllerSlider.max = width;
+    }
+    getData();
+    addToCookie();
+};
+    
+const updateProgress = () => {
+    operatorSlider.style.background = 'linear-gradient(to right, #f3f3f3 0px, #f3f3f3 ' + controllerSlider.value + 'px, #fff ' + controllerSlider.value + 'px, #fff 100%)';
+    clientSlider.style.background = 'linear-gradient(to right, #f3f3f3 0px, #f3f3f3 ' + controllerSlider.value + 'px, #fff ' + controllerSlider.value + 'px, #fff 100%)';
+    controllerSlider.style.background = 'linear-gradient(to right, #0075ff 0px, #0075ff ' + controllerSlider.value + 'px, #cbe3ff ' + controllerSlider.value + 'px, #cbe3ff 100%)';
+};
+
+const round = (num, coef) => {
+    const addStr = (coef === 100) ? '%' : '';
+    if (num === '-') return num;
+    else return Math.floor(num * coef) + addStr;
+}
+
+const timeToString = (time) => {
+    time = parseInt(time);
+    let seconds = (time % 60).toString();
+    if (seconds.length < 2) seconds = `0${seconds}`;
+    let minutes = parseInt(time / 60).toString();
+    if (minutes.length < 2) minutes = `0${minutes}`;
+    return `${minutes}:${seconds}`;
+}
+
+const removeMillis = (stringTime) => {
+    const splitTime = stringTime.split(':');
+    return `${splitTime[0]}:${splitTime[1]}`;
+};
+
+const parseTime = (stringTime) => {
+    const splitTime = stringTime.split(':');
+    let seconds = 0;
+    for (let i = 0; i < 2; i++) {
+        seconds *= 60;
+        seconds += parseInt(splitTime[i]);
+    }
+    if (splitTime.length > 2) seconds += parseInt(splitTime[2]) / 10;
+    return seconds;
+};
+const duration = parseTime('{{duration}}');
+document.querySelector('#duration').innerText = removeMillis('{{duration}}');
+
+const showPhrase = (phrases) => {
+    emotionalSpeechText.querySelectorAll('tr.active').forEach((speech) => speech.classList.remove('active'));
+    if (!phrases) return;
+    let scrolled = false;
+    phrases.forEach((phrase) => {
+        phrase.classList.add('active');
+        if (!scrolled && !mouseOver) emotionalSpeechText.scrollTo(0, phrase.offsetTop);
+        scrolled = true;
+    });
+};
+
+const selectActivePhrase = (time) => {
+    const phrases = phraseTimings.get(parseInt(time));
+    if (!phrases) return;
+    const arr = [];
+    phrases.forEach((phrase) => {
+        const phraseStart = parseFloat(phrase.getAttribute('data-start'));
+        const phraseEnd = parseFloat(phrase.getAttribute('data-end'));
+        if (phraseStart <= time && time <= phraseEnd) arr.push(phrase);
+    });
+    showPhrase(arr);
+};
+
+const advance = (end = null) => {
+    timer = setTimeout(() => advance(end), 200);
+    const time = audioPlayer.currentTime;
+    if (audioPlayer.paused) {
+        clearTimeout(timer);
+        //clearInterval(timer)
+        if (isPlaying) toggle();
+    }
+    if (typeof(end) == 'number') {
+        if (time >= end && isPlaying) toggleFragment();
+        return;
+    }
+    currentTime.innerText = timeToString(time);
+    percent = Math.floor(time * width / duration);
+    controllerSlider.value = percent;
+    updateProgress();
+    selectActivePhrase(time);
+};
+
+const toggle = () => {
+    if (isPlaying) audioPlayer.pause();
+    else audioPlayer.play();
+    document.querySelector('#play-pause-button').classList.toggle('pause');
+    isPlaying = !isPlaying;
+    advance();
+    //timer = setInterval(advance, 200);
+};
+
+const showArrow = (type, start, end, channel) => {
+    let near = false;
+    let left = Math.round(start * width / duration);
+    triangles.forEach((triangle) => {
+        if (triangle.left + 50 >= left) {
+            triangle.count[type]++;
+            left = triangle.left;
+            near = true;
+            return;
+        }
+    });
+    const rectangle = document.createElement('div');
+    const triangle = document.createElement('div');
+    rectangle.classList.add('player-rectangle');
+    triangle.classList.add('player-triangle');
+    rectangle.style.width = '2px';
+    rectangle.style.left = left + 'px';
+    triangle.style.left = left - 6 + 'px';
+    triangle.addEventListener('click', () => {
+        audioPlayer.currentTime = Math.max(start - 3, 0);
+        if (!isPlaying) toggle();
+    });
+    if (type === 0) {
+        rectangle.classList.add('gray');
+        triangle.classList.add('gray');
+        const chistWidth = (end - start) * width / duration;
+        //rectangle.style.width = `${chistWidth}px`;
+        operatorSlider.insertBefore(rectangle, operatorSlider.firstChild);
+        operatorSlider.insertBefore(triangle, operatorSlider.firstChild);
+    }
+    if (type === 1) {
+        rectangle.classList.add('red');
+        triangle.classList.add('red');
+        operatorSlider.insertBefore(rectangle, operatorSlider.firstChild);
+        operatorSlider.insertBefore(triangle, operatorSlider.firstChild);
+        clientSlider.insertAdjacentHTML('afterbegin', rectangle.outerHTML);
+    }
+    if (type === 2) {
+        rectangle.classList.add('violet');
+        triangle.classList.add('violet');
+        operatorSlider.insertBefore(rectangle, operatorSlider.firstChild);
+        operatorSlider.insertBefore(triangle, operatorSlider.firstChild);
+    }
+};
+
+const addDataBlock = (num, start, end, intercept, speaker, emotionalClass) => {
+    const block = document.createElement('div');
+    block.classList.add('speech-fragment');
+    block.classList.add(emotionalClass);
+    block.classList.add('active');
+    block.setAttribute('num', num);
+    const fragDuration = end - start;
+    const blockWidth = fragDuration * (width - 2) / duration;
+    const leftPosition = start * width / duration;
+    block.style.width = `${blockWidth}px`;
+    block.style.left = `${leftPosition}px`;
+    if (speaker === 'клиент') clientSlider.appendChild(block);
+    else {
+        operatorSlider.appendChild(block);
+        if (intercept) showArrow(1, start, end);
+    }
+};
+
+const toggleFragment = () => {
+    if (isPlaying) audioPlayer.pause();
+    else {
+        audioPlayer.play();
+        const time = parseFloat(elementContext.getAttribute('data-start'));
+        audioPlayer.currentTime = time;
+    }
+    document.querySelector('#play-pause-button-fragment').classList.toggle('pause');
+    isPlaying = !isPlaying;
+    advance(parseFloat(elementContext.getAttribute('data-end')))
+};
+
+const setNewText = () => {
+    const replacingP = elementContext.querySelectorAll('td')[1].querySelector('p');
+    const oldText = editText.querySelectorAll('p')[1].innerText;
+    const newText = editText.querySelector('textarea').value.trim().replace(/\n\n/g, '\n').replace(/  /g, ' ');
+    if (newText === '') return;
+    if (oldText !== newText) updateTextEmotion(elementContext.getAttribute('row-num'), newText);
+    replacingP.innerText = newText;
+};
+
+const removeText = () => {
+    updateTextEmotion(elementContext.getAttribute('row-num'));
+    elementContext.remove();
+    const trs = emotionalSpeechText.querySelectorAll('tr');
+    for (let i = 0; i < trs.length; i++) {
+       trs[i].setAttribute('row-num', i);
+    }
+};
+
+const setNewEmotion = (id) => {
+    const emotion = id.substring(5);
+    const num = elementContext.getAttribute('row-num');
+    const block = document.querySelector('.emotional .timeline').querySelector(`div.speech-fragment[num="${num}"]`);
+    const classList = block.classList;
+    let wasActive = classList.contains('active');
+    classList.remove('active');
+    const oldEmotion = classList[1];
+    if (wasActive) classList.add('active');
+    classList.remove('neutral', 'positive', 'negative');
+    classList.add(emotion);
+    if (emotion != oldEmotion) updateTextEmotion(num, emotion, true);
+};
+
+const showContext = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    contextMenu.classList.add('visible');
+    const tr = event.target.closest('tr');
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const { clientX: mouseX, clientY: mouseY } = event;
+    contextMenu.style.left = `${mouseX}px`;
+    contextMenu.style.top = `${mouseY + scrollTop}px`;
+    if (elementContext) elementContext.classList.remove('hover');
+    elementContext = tr;
+    elementContext.classList.add('hover');
+}
+
+const hideContext = (event) => {
+    contextMenu.classList.remove('visible');
+    if (elementContext) elementContext.classList.remove('hover');
+}
+
+const fillTimingsMap = (tr, timings) => {
+    timings.forEach((timing) => {
+        const arr = phraseTimings.get(timing) ? phraseTimings.get(timing) : [];
+        arr.push(tr);
+        phraseTimings.set(timing, arr)
+    });
+}
+
+const showData = () => {
+    for (let i = 0; i < Object.keys(DarwinAI.speak_model).length; i++) {
+        const speechModel = DarwinAI.speak_model[i];
+        const channel = reverse ? (speechModel.channel === 'менеджер' ? 'клиент' : 'менеджер') : speechModel.channel;
+        const start = speechModel.start;
+        const end = speechModel.end;
+        const intercept = speechModel.interception === 1;
+        const emotionClass = speechModel.emotion_result;
+
+        const tr = document.createElement('tr');
+        if (channel === 'клиент') tr.classList.add('client');
+        else tr.classList.add('operator');
+        tr.classList.add(emotionClass);
+        tr.classList.add('pressed');
+        tr.setAttribute('row-num', i);
+        
+        const spanChannel = document.createElement('p');
+        spanChannel.classList.add('speaker');
+        spanChannel.innerText = `${channel}:`;
+
+        const spanTime = document.createElement('p');
+        spanTime.classList.add('time-code');
+        spanTime.innerText = `${removeMillis(speechModel.format_start)}`;
+
+        const textSpeech = document.createElement('p');
+        textSpeech.innerText = getCookie('moderator') ? speechModel.normalized_text : speechModel.denormalized_text;
+        textSpeech.style = 'word-break: break-word;';
+
+        const td1 = document.createElement('td');
+        td1.appendChild(spanChannel);
+        td1.appendChild(spanTime);
+
+        const td2 = document.createElement('td');
+        td2.appendChild(textSpeech);
+
+        tr.setAttribute('data-time', spanTime.innerText);
+        tr.setAttribute('data-start', start);
+        tr.setAttribute('data-end', end);
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+        tr.addEventListener('click', () => {
+            audioPlayer.currentTime = start;
+            advance();
+            if (!isPlaying) toggle();
+        });
+        tr.addEventListener('contextmenu', showContext);
+        emotionalSpeechText.querySelector('table').appendChild(tr);
+        addDataBlock(i, start, end, intercept, channel, emotionClass);
+        fillTimingsMap(tr, range(parseInt(start), parseInt(end), true));
+    }
+};
+
+const underlineKeys = () => {
+    const dictionaries = ['crit', 'neg', 'par', 'client_pos', 'client_neg'];
+    const operatorDicts = dualChannel ? ['crit', 'neg', 'par'] : dictionaries;
+    const trs = emotionalSpeechText.querySelectorAll('tr');
+    trs.forEach((tr) => {
+        const p = tr.querySelector('p:not([class])');
+        let html = p.innerText;
+        dictionaries.forEach((dictionary) => {
+            const origin = DarwinAI.extra[tr.getAttribute('row-num')][`orig_${dictionary}`];
+            if (origin === '' || tr.classList.contains('operator') && !operatorDicts.includes(dictionary) || tr.classList.contains('client') && operatorDicts.includes(dictionary)) return;
+            keys = origin.split('&');
+            keys.forEach((key) => {
+                const words = key.split(' ');
+                let reStr = '(^|\\s)';
+                for (let j = 0; j < words.length - 1; j++) reStr += `${words[j]}([\\s,.](?!${words[j]}).*[\\s,.]|[\\s,.])`;
+                reStr += `${words[words.length - 1]}[\\s,.]`;
+                let re = new RegExp(reStr, 'ui');
+                let pos = html.search(re);
+                let first = ''; let middle = ''; let last = '';
+                if (pos > 0) {
+                    first = html.slice(0, pos + 1);
+                    pos++;
+                }
+                for (let j = 0; j < words.length - 1; j++) {
+                    middle += `<span class="${dictionary}">${html.slice(pos, pos + words[j].length)}</span>`;
+                    pos += words[j].length;
+                    const lastPos = html.slice(pos).search(new RegExp(words[j + 1], 'ui'));
+                    middle += html.slice(pos, pos + lastPos);
+                    pos += lastPos;
+                }
+                middle += `<span class="${dictionary}">${html.slice(pos, pos + words[words.length - 1].length)}</span>`;
+                pos += words[words.length - 1].length;
+                last = html.slice(pos);
+                html = `${first}${middle}${last}`;
+            });
+        });
+        p.innerHTML = html;
+    });
+}
+
+        //OPTIMIZIROVAT
+        
+const showScriptCritNegClient = () => {
+    const scripts = DarwinAI.script_words[channel0].table;
+    const critWords = DarwinAI.crit_words[channel0].count_each;
+    const negWords = DarwinAI.neg_words[channel0].count_each;
+    const parWords = DarwinAI.par_words[channel0].count_each;
+    const clientPosWords = DarwinAI.client_pos_words[dualChannel ? channel1 : channel0].count_each;
+    const clientNegWords = DarwinAI.client_neg_words[dualChannel ? channel1 : channel0].count_each;
+        
+    Object.keys(scripts).forEach((script) => {
+        const scriptButton = document.createElement('div');
+        scriptButton.classList.add('script');
+        if (scripts[script].said) scriptButton.classList.add('active');
+        scriptButton.innerText = scripts[script].text;
+        scriptBlock.append(scriptButton);
+    });
+    scriptBlock.querySelector('span').innerText = DarwinAI.script_words[channel0].count_said;
+    
+    const emptyMessage = document.createElement('p');
+    emptyMessage.style.color = '#8d8d8d';
+    emptyMessage.innerText = 'Слова не сказаны';
+    let i = 0;
+    let all = 0;
+    Object.keys(critWords).forEach((word) => {
+        if (word === '') return;
+        const wordButton = document.createElement('p');
+        wordButton.classList.add('active');
+        wordButton.innerText = word;
+        const wordSpan = document.createElement('span');
+        wordSpan.classList.add('count');
+        wordButton.append(wordSpan);
+        //if (critWords[word] > 1) {
+            wordSpan.innerText = critWords[word];
+        //}
+        all += critWords[word];
+        critBlock.append(wordButton);
+        i++;
+        countClicks.set(word, 0);
+        wordButton.addEventListener('click', () => {
+            const words = DarwinAI['crit_words'][channel0]['timing'];
+            let num = 0;
+            for (let i = 0; i < Object.keys(words).length; i++) {
+                if (words[i]['words'] === word) {
+                    if (countClicks.get(word) === num) {
+                        showPhrase([keyPhrases.get(word)[num]]);
+                        countClicks.set(word, (num + 1) % critWords[word]);
+                        return;
+                    }
+                    num++;
+                }
+            }
+        });
+    });
+    if (i === 0) critBlock.innerHTML += emptyMessage.outerHTML;
+    critBlock.querySelector('span').innerText = all;
+    
+    i = 0;
+    all = 0;
+    Object.keys(negWords).forEach((word) => {
+        if (word === '') return;
+        const wordButton = document.createElement('p');
+        wordButton.classList.add('active');
+        wordButton.innerText = word;
+        const wordSpan = document.createElement('span');
+        wordSpan.classList.add('count');
+        wordButton.append(wordSpan);
+        //if (negWords[word] > 1) {
+            wordSpan.innerText = negWords[word];
+        //}
+        all += negWords[word];
+        negBlock.append(wordButton);
+        i++;
+        countClicks.set(word, 0);
+        wordButton.addEventListener('click', () => {
+            const words = DarwinAI['neg_words'][channel0]['timing'];
+            let num = 0;
+            for (let i = 0; i < Object.keys(words).length; i++) {
+                if (words[i]['words'] === word) {
+                    if (countClicks.get(word) === num) {
+                        showPhrase([keyPhrases.get(word)[num]]);
+                        countClicks.set(word, (num + 1) % negWords[word]);
+                        return;
+                    }
+                    num++;
+                }
+            }
+        });
+    });
+    if (i === 0) negBlock.innerHTML += emptyMessage.outerHTML;
+    negBlock.querySelector('span').innerText = all;
+    
+    i = 0;
+    all = 0;
+    Object.keys(parWords).forEach((word) => {
+        if (word === '') return;
+        const wordButton = document.createElement('p');
+        wordButton.classList.add('active');
+        wordButton.innerText = word;
+        const wordSpan = document.createElement('span');
+        wordSpan.classList.add('count');
+        wordButton.append(wordSpan);
+        //if (parWords[word] > 1) {
+            wordSpan.innerText = parWords[word];
+        //}
+        all += parWords[word];
+        parBlock.append(wordButton);
+        i++;
+        countClicks.set(word, 0);
+        wordButton.addEventListener('click', () => {
+            const words = DarwinAI['par_words'][channel0]['timing'];
+            let num = 0;
+            for (let i = 0; i < Object.keys(words).length; i++) {
+                if (words[i]['words'] === word) {
+                    if (countClicks.get(word) === num) {
+                        showPhrase([keyPhrases.get(word)[num]]);
+                        countClicks.set(word, (num + 1) % parWords[word]);
+                        return;
+                    }
+                    num++;
+                }
+            }
+        });
+    });
+    if (i === 0) parBlock.innerHTML += emptyMessage.outerHTML;
+    parBlock.querySelector('span').innerText = all;
+    
+    i = 0;
+    all = 0;
+    Object.keys(clientPosWords).forEach((word) => {
+        if (word === '') return;
+        const wordButton = document.createElement('p');
+        wordButton.classList.add('active');
+        wordButton.innerText = word;
+        const wordSpan = document.createElement('span');
+        wordSpan.classList.add('count');
+        wordButton.append(wordSpan);
+        //if (clientPosWords[word] > 1) {
+            wordSpan.innerText = clientPosWords[word];
+        //}
+        all += clientPosWords[word];
+        clientPosBlock.append(wordButton);
+        i++;
+        countClicks.set(word, 0);
+        wordButton.addEventListener('click', () => {
+            const words = DarwinAI['client_pos_words'][channel1]['timing'];
+            let num = 0;
+            for (let i = 0; i < Object.keys(words).length; i++) {
+                if (words[i]['words'] === word) {
+                    if (countClicks.get(word) === num) {
+                        showPhrase([keyPhrases.get(word)[num]]);
+                        countClicks.set(word, (num + 1) % clientPosWords[word]);
+                        return;
+                    }
+                    num++;
+                }
+            }
+        });
+    });
+    if (i === 0) clientPosBlock.innerHTML += emptyMessage.outerHTML;
+    clientPosBlock.querySelector('span').innerText = all;
+    
+    i = 0;
+    all = 0;
+    Object.keys(clientNegWords).forEach((word) => {
+        if (word === '') return;
+        const wordButton = document.createElement('p');
+        wordButton.classList.add('active');
+        wordButton.innerText = word;
+        const wordSpan = document.createElement('span');
+        wordSpan.classList.add('count');
+        wordButton.append(wordSpan);
+        //if (clientNegWords[word] > 1) {
+            wordSpan.innerText = clientNegWords[word];
+        //}
+        all += clientNegWords[word];
+        clientNegBlock.append(wordButton);
+        i++;
+        countClicks.set(word, 0);
+        wordButton.addEventListener('click', () => {
+            const words = DarwinAI['client_neg_words'][channel1]['timing'];
+            let num = 0;
+            for (let i = 0; i < Object.keys(words).length; i++) {
+                if (words[i]['words'] === word) {
+                    if (countClicks.get(word) === num) {
+                        showPhrase([keyPhrases.get(word)[num]]);
+                        countClicks.set(word, (num + 1) % clientNegWords[word]);
+                        return;
+                    }
+                    num++;
+                }
+            }
+        });
+    });
+    if (i === 0) clientNegBlock.innerHTML += emptyMessage.outerHTML;
+    clientNegBlock.querySelector('span').innerText = all;
+};
+
+const fillKeyPhrases = () => {
+    const critWords = DarwinAI.crit_words[channel0].timing;
+    const negWords = DarwinAI.neg_words[channel0].timing;
+    const parWords = DarwinAI.par_words[channel0].timing;
+    const clientPosWords = DarwinAI.client_pos_words[dualChannel ? channel1 : channel0].timing;
+    const clientNegWords = DarwinAI.client_neg_words[dualChannel ? channel1 : channel0].timing;
+    const trs = emotionalSpeechText.querySelectorAll('tr');
+    Object.keys(critWords).forEach((word) => {
+        tr = trs[critWords[word].line];
+        if (!keyPhrases.get(critWords[word].words)) keyPhrases.set(critWords[word].words, []);
+        keyPhrases.get(critWords[word].words).push(tr);
+    });
+    Object.keys(negWords).forEach((word) => {
+        tr = trs[negWords[word].line];
+        if (!keyPhrases.get(negWords[word].words)) keyPhrases.set(negWords[word].words, []);
+        keyPhrases.get(negWords[word].words).push(tr);
+    });
+    Object.keys(parWords).forEach((word) => {
+        tr = trs[parWords[word].line];
+        if (!keyPhrases.get(parWords[word].words)) keyPhrases.set(parWords[word].words, []);
+        keyPhrases.get(parWords[word].words).push(tr);
+    });
+    Object.keys(clientPosWords).forEach((word) => {
+        tr = trs[clientPosWords[word].line];
+        if (!keyPhrases.get(clientPosWords[word].words)) keyPhrases.set(clientPosWords[word].words, []);
+        keyPhrases.get(clientPosWords[word].words).push(tr);
+    });
+    Object.keys(clientNegWords).forEach((word) => {
+        tr = trs[clientNegWords[word].line];
+        if (!keyPhrases.get(clientNegWords[word].words)) keyPhrases.set(clientNegWords[word].words, []);
+        keyPhrases.get(clientNegWords[word].words).push(tr);
+    });
+};
+
+const showStats = () => {
+    const statFields = document.querySelector('#statistics').querySelectorAll('td');
+    if (dualChannel) {
+        statFields[0].innerText = `${Math.round(DarwinAI.info[channel0].volume_of_speech)}%`;
+        statFields[1].innerText = `${DarwinAI.script_words[channel0].count_said}/${DarwinAI.script_words[channel0].count_total}`;
+        statFields[2].innerText = `${DarwinAI.info.speed_control}%`;
+        statFields[3].innerText = `${DarwinAI.info.volume_control}%`;
+        statFields[4].innerText = DarwinAI.info[channel0].interseps;
+        statFields[8].innerText = `${DarwinAI.emotional[channel0].positive} | ${DarwinAI.emotional[channel1].positive}`;
+        statFields[9].innerText = `${DarwinAI.emotional[channel0].negative} | ${DarwinAI.emotional[channel1].negative}`;
+    } else {
+        const ths = document.querySelector('#statistics').querySelectorAll('th');
+        ths[8].innerHTML = 'Позитив в диалоге<br>неизвестно';
+        ths[9].innerHTML = 'Негатив в диалоге<br>неизвестно';
+        statFields[8].innerText = DarwinAI.emotional[channel0].positive;
+        statFields[9].innerText = DarwinAI.emotional[channel0].negative;
+    }
+    statFields[5].innerText = `${DarwinAI.par_words[channel0].purity}%`;
+    statFields[6].innerText = DarwinAI.crit_words[channel0].count_total;
+    statFields[7].innerText = DarwinAI.neg_words[channel0].count_total;
+};
+
+const mousePosToSlider = (event) => {
+    startPos += event.movementX
+    console.log(startPos)
+    audioPlayer.currentTime = startPos * duration / width;
+    advance();
+};
+
+const resizeTextArea = (textArea) => {
+    textArea.style.height = '0px';
+    textArea.style.height = `${textArea.scrollHeight - 20}px`;
+};
+
+const showArrows = () => {
+    Object.keys(DarwinAI.par_words[channel0].timing).forEach((i) => showArrow(0, parseTime(DarwinAI.par_words[channel0].timing[i].start)));
+    Object.keys(DarwinAI.script_words[channel0].timing).forEach((i) => showArrow(2, parseTime(DarwinAI.script_words[channel0].timing[i].start)));
+};
+
+const fillPage = () => {
+    if (DarwinAI.info.client) dualChannel = true;
+    document.querySelector('#export-script').href = `/export/calls/{{path}}/${channel0}/scripts.csv`;
+    showStats();
+    showData();
+    fillKeyPhrases();
+    showScriptCritNegClient();
+    underlineKeys();
+    triangles.forEach((triangle) => {
+        const purifyCount = triangle.count[0];
+        const interceptionCount = triangle.count[1];
+        const scriptCount = triangle.count[2];
+        let mult = 0;
+        if (interceptionCount > 0) {
+            const triangleSpan = document.createElement('span');
+            triangleSpan.innerText = interceptionCount;
+            triangleSpan.classList.add('red');
+            triangle.triangle.append(triangleSpan);
+            mult++;
+        }
+        if (purifyCount > 0) {
+            const triangleSpan = document.createElement('span');
+            triangleSpan.innerText = purifyCount;
+            triangleSpan.classList.add('gray');
+            triangleSpan.style = `margin-top: -${mult * 20}px;`;
+            triangle.triangle.append(triangleSpan);
+            mult++;
+        }
+        if (scriptCount > 0) {
+            const triangleSpan = document.createElement('span');
+            triangleSpan.innerText = scriptCount;
+            triangleSpan.classList.add('violet');
+            triangleSpan.style = `margin-top: -${mult * 20}px;`;
+            triangle.triangle.append(triangleSpan);
+        }
+    });
+    showArrows();
+    if (!dualChannel) {
+        operatorSlider.querySelector('span').innerText = 'Неизвестно';
+        clientSlider.remove();
+        document.querySelector('#rotate').style.display = 'none';
+    }
+};
+
+const rotateChannels = () => {
+    setReverse();
+    reverse = !reverse;
+    const channel = channel0;
+    channel0 = channel1;
+    channel1 = channel;
+    emotionalSpeechText.querySelectorAll('tr').forEach((tr) => {
+        tr.remove();
+    });
+    scriptBlock.querySelectorAll('.script').forEach((script) => {
+        script.remove();
+    });
+    critBlock.querySelectorAll('p').forEach((word) => {
+        word.remove();
+    });
+    negBlock.querySelectorAll('p').forEach((word) => {
+        word.remove();
+    });
+    parBlock.querySelectorAll('p').forEach((word) => {
+        word.remove();
+    });
+    clientPosBlock.querySelectorAll('p').forEach((word) => {
+        word.remove();
+    });
+    clientNegBlock.querySelectorAll('p').forEach((word) => {
+        word.remove();
+    });
+    operatorSlider.querySelectorAll('div').forEach((block) => {
+        block.remove();
+    });
+    clientSlider.querySelectorAll('div').forEach((block) => {
+        block.remove();
+    });
+    clearfy.classList.remove('active');
+    intersept.classList.remove('active');
+    scriptSaid.classList.remove('active');
+    fillPage();
+};
+
+const eventListeners = () => {
+    //audioPlayer.addEventListener('playing', advance);
+    controllerSlider.addEventListener('input', () => {
+        audioPlayer.currentTime = controllerSlider.value * duration / width;
+        advance();
+    });
+    document.querySelectorAll('#play-pause-button, .play-pause').forEach((playButton) => {
+        playButton.addEventListener('click', toggle);
+    });
+    document.querySelectorAll('#play-pause-button-fragment, .play-pause-fragment').forEach((playButtonFragment) => {
+        playButtonFragment.addEventListener('click', toggleFragment);
+    });
+    let down = false;
+    operatorSlider.addEventListener('mousedown', (event) => {
+        if (event.target.classList.contains('player-triangle')) return;
+        down = true;
+        startPos = event.layerX;
+        if (operatorSlider !== event.target) startPos = event.target.getBoundingClientRect().x - operatorSlider.getBoundingClientRect().x + event.layerX;
+        console.log(startPos)
+        audioPlayer.currentTime = startPos * duration / width;
+        advance();
+        if (!isPlaying) toggle();
+        document.addEventListener('mousemove', mousePosToSlider);
+    });
+    clientSlider.addEventListener('mousedown', (event) => {
+        down = true;
+        startPos = event.layerX;
+        if (clientSlider !== event.target) startPos = event.target.getBoundingClientRect().x - clientSlider.getBoundingClientRect().x + event.layerX;
+        audioPlayer.currentTime = startPos * duration / width;
+        advance();
+        if (!isPlaying) toggle();
+        document.addEventListener('mousemove', mousePosToSlider);
+    });
+    document.addEventListener('mouseup', (event) => {
+        if (down) document.removeEventListener('mousemove', mousePosToSlider);
+        down = false;
+        if (event.button !== 2) hideContext();
+    });
+    document.addEventListener('contextmenu', (event) => {
+        hideContext();
+    });
+    clearfy.addEventListener('click', () => {
+        const elements = document.querySelectorAll('.player-triangle.gray, .player-rectangle.gray');
+        clearfy.classList.toggle('active');
+        elements.forEach((element) => { element.classList.toggle('active'); });
+    });
+    intersept.addEventListener('click', () => {
+        const elements = document.querySelectorAll('.player-triangle.red, .player-rectangle.red');
+        intersept.classList.toggle('active');
+        elements.forEach((element) => { element.classList.toggle('active'); });
+    });
+    scriptSaid.addEventListener('click', () => {
+        const elements = document.querySelectorAll('.player-triangle.violet, .player-rectangle.violet');
+        scriptSaid.classList.toggle('active');
+        elements.forEach((element) => { element.classList.toggle('active'); });
+    });
+    emotions.addEventListener('click', () => {
+        const elements = document.querySelectorAll('.speech-fragment');
+        const elements2 = emotionalSpeechText.querySelector('table').querySelectorAll('tr');
+        emotions.classList.toggle('active');
+        elements.forEach((element) => { element.classList.toggle('active'); });
+        elements2.forEach((element) => { element.classList.toggle('pressed'); });
+    });
+    emotionalSpeechText.addEventListener('mouseover', (event) => {
+        mouseOver = true;
+    });
+    emotionalSpeechText.addEventListener('mouseout', (event) => {
+        mouseOver = false;
+    });
+    speedxButton.addEventListener('click', (event) => {
+        if (speedxButton.classList.contains('active')) {
+            audioPlayer.playbackRate = 1;
+        } else {
+            audioPlayer.playbackRate = 1.5;
+        }
+        speedxButton.classList.toggle('active');
+    });
+    window.addEventListener('resize', (event) => {
+        width = controllerSlider.clientWidth;
+    });
+    contextMenu.querySelector('#edit-text').addEventListener('click', (event) => {
+        event.stopPropagation();
+        const replacingP = elementContext.querySelectorAll('td')[1].querySelector('p');
+        editText.style.display = 'block';
+        editText.querySelectorAll('p')[1].innerText = replacingP.innerText;
+        const textArea = editText.querySelector('textarea');
+        textArea.value = replacingP.innerText;
+        resizeTextArea(textArea);
+        if (isPlaying) toggle();
+        oldAudioPos = audioPlayer.currentTime;
+        document.querySelector('#play-pause-button-fragment').classList.remove('pause');
+    });
+    contextMenu.querySelector('#remove-text').addEventListener('click', removeText);
+    contextSubMenu.querySelectorAll('.item').forEach((item) => {
+        item.addEventListener('click', (event) => {
+            setNewEmotion(item.id);
+        });
+    });
+    emotionalSpeechText.addEventListener('scroll', (event) => {
+        hideContext();
+    });
+    editText.querySelector('button.button').addEventListener('click', () => {
+        setNewText();
+        editText.style.display = '';
+        audioPlayer.pause();
+        isPlaying = false;
+        audioPlayer.currentTime = oldAudioPos;
+    });
+    editText.addEventListener('click', (event) => {
+        if (event.target.classList.contains('popup') || event.target === editText.querySelector('div.button')) {
+            editText.style.display = '';
+            audioPlayer.pause();
+            isPlaying = false;
+            audioPlayer.currentTime = oldAudioPos;
+        }
+    });
+    document.querySelector('#rotate').addEventListener('click', rotateChannels);
+};
+
+const setReverse = async () => {
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    const response = await fetch(`${managerPath}/post_analyze/{{path}}.reverse/`, {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    }).then(result => {
+    }).catch(error => {
+        console.log(error);
+    });
+};
+
+const updateTextEmotion = async (num, newValue = undefined, isEmotion = false) => {
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    formdata.append('new_num', num);
+    if (newValue)
+        if (isEmotion) formdata.append('new_emotion', newValue);
+        else formdata.append('new_text', newValue);
+    const response = await fetch(`${managerPath}/post_analyze/{{path}}.update-text_emotion/`, {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    }).then(result => {
+    }).catch(error => {
+        console.log(error);
+    });
+};
+
+const setTime = async (time) => {
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    formdata.append('time', time);
+    const response = await fetch(`${managerPath}/post_analyze/{{path}}/`, {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+
+const getData = async () => {
+    const response = await fetch(`${managerPath}/post_analyze/{{path}}.speak-model/`)
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    }).then(result => {
+        fillGlobal(result);
+        fillPage();
+        eventListeners();
+        document.querySelector('#progress').style.display = '';
+        const endLoading = new Date().getTime();
+        const timeLoading = endLoading - startLoading;
+        setTime(timeLoading);
+    }).catch(error => {
+        console.log(error);
+    });
+};
+{% endblock %}

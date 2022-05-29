@@ -1,0 +1,1 @@
+export const UPDATE_CRITCALLS = 'UPDATE_CRITCALLS';

@@ -1,0 +1,36 @@
+int_t_start: 0.5
+int_t_stop: 1.0
+vad_padding: 0.2
+columns: [channel, start, end, normalized_text, denormalized_text, interception, wpr, spr, spr_mean, words, symbols, volume, duration, positive_text, negative_text, positive_voice, negative_voice]
+emo_keys: [positive_text, negative_text, positive_voice, negative_voice]
+columns_show: !ref <columns>
+emo_show: True
+time_format: M:S:MS1
+channel_name:
+  1:
+    operator
+  2:
+    out:
+      [operator, client]
+    in:
+      [operator, client]
+    unknown:
+      [operator, client]
+numbers_float: 1
+sprs_history_iters: 5
+sprs_mean: 500
+
+loud_min: 0
+loud_max: 70
+
+spr_min: 0
+spr_max: 2000
+
+thr_emo_text: 0.85
+thr_emo_voice: 0.80
+
+score_treschold: 0.2
+blacklist_cap: [куда, реферальной, нажа, плюсик]
+
+replace_norm_form:
+  смочь: мочь

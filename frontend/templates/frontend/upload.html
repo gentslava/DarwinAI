@@ -1,0 +1,77 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="head">
+    <h1>Call upload</h1>
+    <div class="call-summary"></div>
+</div>
+<div class="body">
+    <form id="upload-container" method="post" enctype="multipart/form-data" ondrop="wasDrop(event)" ondragover="nearDrop(event)" ondragleave="leaveDrop()">
+        {% csrf_token %}
+        {{form}}
+        <span>&nbsp;или можете перетащить файлы в эту область</span>
+    </form>
+</div>
+{% endblock %}
+{% block script %}
+const form = document.querySelector('#upload-container');
+const input = document.querySelector('#audio-input');
+window.onload = () => {
+    form.addEventListener('click', (event) => { if (event.target.tagName !== 'LABEL') input.click(); });
+    input.addEventListener('change', uploadAudio);
+};
+
+const uploadAudio = () => {
+    Array.from(input.files).forEach(file => {
+        postData(file);
+    });
+};
+
+const nearDrop = (event) => {
+    event.preventDefault();
+    form.classList.add('dropping');
+};
+
+const leaveDrop = () => form.classList.remove('dropping');
+
+const wasDrop = (event) => {
+    event.preventDefault();
+    form.classList.remove('dropping');
+    
+    if (event.dataTransfer.items) {
+        Array.from(event.dataTransfer.items).forEach(item => {
+            if (item.kind === 'file') {
+                const file = item.getAsFile();
+                postData(file);
+            }
+        });
+    }
+};
+
+const postData = async (file) => {
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    formdata.append('file', file);
+    const response = await fetch('/upload/', {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        console.log(result);
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+{% endblock %}

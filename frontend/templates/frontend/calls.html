@@ -1,0 +1,606 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="head">
+    <div class="nav-prev">
+        <a  href="{% url 'managers' %}" id="back">
+            <p class="icon-Back"></p>
+        </a>
+        <h1>Статистика звонков менеджера</h1>
+    </div>
+    <input type="date">
+</div>
+<div class="body">
+    <form id="upload-container" style="display: none;" method="post" enctype="multipart/form-data" ondrop="wasDrop(event)" ondragover="nearDrop(event)" ondragleave="leaveDrop()">
+        {% csrf_token %}
+        {{form}}
+        <span>&nbsp;или можете перетащить файлы в эту область</span>
+    </form>
+    <div id="upload" class="button">Загрузить звонки</div>
+    <div class="manager statistic">
+        <div class="person">
+            <div class="star">
+                <svg viewBox="0 0 45 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.0531 1.00547C22.2376 0.637793 22.7624 0.637793 22.9469 1.00547L29.0603 13.1888C29.2717 13.6101 29.6688 13.9075 30.1325 13.9918L43.1195 16.3546C43.5075 16.4252 43.6649 16.8962 43.3972 17.1859L34.1532 27.1866C33.8489 27.5158 33.7078 27.9638 33.7686 28.408L35.6494 42.1593C35.7042 42.5606 35.2841 42.8572 34.9243 42.6712L23.1889 36.6039C22.7568 36.3805 22.2432 36.3805 21.8111 36.6039L10.0757 42.6712C9.71585 42.8572 9.29575 42.5606 9.35064 42.1593L11.2314 28.408C11.2922 27.9638 11.1511 27.5158 10.8468 27.1866L1.60281 17.1859C1.3351 16.8962 1.49245 16.4252 1.88049 16.3546L14.8675 13.9918C15.3312 13.9075 15.7283 13.6101 15.9397 13.1888L22.0531 1.00547Z" fill="url(#paint{{color}})" stroke="url(#paint{{color}})"/>
+                    <defs>
+                        <linearGradient id="paint0" x1="22.5" y1="-1" x2="22.5" y2="44" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#6100FF"/>
+                            <stop offset="1" stop-color="#03DAC5"/>
+                        </linearGradient>
+                        <linearGradient id="paint1" x1="22.5" y1="-1" x2="22.5" y2="44" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#6100FF"/>
+                            <stop offset="1" stop-color="#DBB2FF"/>
+                        </linearGradient>
+                        <linearGradient id="paint2" x1="22.5" y1="-1" x2="22.5" y2="44" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#B00020"/>
+                            <stop offset="1" stop-color="#FF002E"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>{{rating}}</span>
+            </div>
+            <img src="{{avatar}}" alt="">
+            <div style="margin: auto 0;">
+                <p style="margin: 0;">{{first_name}} {{last_name}}</p>
+                <span style="font-size: 12px; color: #979797;">{{department}}</span>
+            </div>
+        </div>
+        <div class="goals">
+            <div class="goal">
+                <p class="icon-Target"></p>
+                <span class="value">{{count}}</span>
+                <span class="description">Всего звонков</span>
+            </div>
+            <div class="goal">
+                <span class="value">{{critical}}</span>
+                <span class="description">Критические звонки</span>
+            </div>
+            <div class="goal">
+                <span class="value">{{purity}}</span>
+                <span class="description">Чистота речи</span>
+            </div>
+            <div class="goal" style="border: unset;">
+                <span class="value">{{script_following}}</span>
+                <span class="description">Выполнение скрипта</span>
+            </div>
+        </div>
+    </div>
+    <div class="popup" id="progress">
+        <span class="icon-Updating"><span class="path1"></span><span class="path2"></span></span>
+        <span class="text">
+            <span id="current-upload" style="margin-left: -45px; position: absolute; text-align: right; width: 40px;"></span>
+            <span id="separator">/</span>
+            <span id="summary-upload" style="margin-left: 5px; position: absolute;"></span>
+        </span>
+    </div>
+    <div class="popup" id="dialog">
+        <div style="width: 270px; text-align: center;">
+            <p>Укажите направление звонка</p>
+            <span style="font-size: 13px;">Это важно для правильного определения менеджера и клиента в разговоре</span>
+            <div style="margin-top: 30px; display: flex; justify-content: space-between; margin-left: 15px; margin-right: 15px; border-bottom: 1px solid #cacaca; padding-bottom: 5px;"><span>Исходящие звонки</span><input type="radio" name="type" value="False" checked></div>
+            <div style="display: flex; justify-content: space-between; margin-left: 15px; margin-right: 15px; padding-top: 5px; margin-bottom: 60px;"><span>Входящие звонки</span><input type="radio" name="type" value="True"></div>
+            <div class="call-stats-element-row">
+                <button type="submit" class="button">Установить</button>
+                <div class="button">Отмена</div>
+            </div>
+        </div>
+    </div>
+    <div style="position: relative;">
+        <div id="remove" class="button" style="position: absolute; top: -50px; right: 0; display: none;">Удалить звонки</div>
+        <div class="table" id="calls">
+            <div class="tr table-headers">
+                <span class="th"><input type="checkbox"></span>
+                <span class="th" orderName="name-order">Имя файла<span class="icon-Down"></span></span>
+                <span class="th sorting" orderName="date-order">Дата<span class="icon-Down"></span></span>
+                <span class="th" orderName="duration-order">Длительность<span class="icon-Down"></span></span>
+                <span class="th" orderName="freq_hints-order">Частые подсказки<span class="icon-Down"></span></span>
+                <span class="th" orderName="script_following-order">Выполнение скрипта<span class="icon-Down"></span></span>
+                <span class="th" orderName="purity-order">Чистота речи<span class="icon-Down"></span></span>
+                <span class="th" orderName="interceptions-order">Перебивания<span class="icon-Down"></span></span>
+                <span class="th" orderName="volume-order">Объем речи<span class="icon-Down"></span></span>
+                <span class="th" orderName="critical-order">Результат звонка<span class="icon-Down"></span></span>
+            </div>
+        </div>
+        <div class="call-stats-element-row" id="pages"></div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+document.querySelectorAll('.menu a')[1].classList.add('active');
+const managerPath = `/${window.location.pathname.split('/')[1]}`;
+const startLoading = new Date().getTime();
+const countSpan = document.querySelector(".goal span");
+const calls = document.querySelector('#calls');
+const form = document.querySelector('#upload');
+const input = document.querySelector('#audio-input');
+const progress = document.querySelector('#progress');
+const ths = document.querySelectorAll('.th:not(:first-child)');
+const checkboxAll = document.querySelector('input[type="checkbox"]');
+const criticalStat = document.querySelector('.goal:nth-child(2) .value');
+const clearfyStat = document.querySelector('.goal:nth-child(3) .value');
+const scriptStat = document.querySelector('.goal:nth-child(4) .value');
+const pageBlock = document.querySelector('#pages');
+let wasAudio = false;
+let uploadCount = 0;
+let removeCount = 0;
+let beenUploaded = 0;
+let toUpload = 0;
+let countCalls = {{count}};
+let updatedClearfy = 0;
+let updatedPodstr = 0;
+let clearify = 0;
+let podstr = 0;
+let lastOrderName = 'date-order';
+let desc = false;
+let order;
+const callsUploaded = new Map();
+const countOnPage = 20;
+let reverse = 'False';
+
+window.onload = () => {
+    changeStar();
+    getData('update');
+    getData('order');
+    eventListeners();
+    addPages();
+    const randomTime = (Math.random(5) + 10) * 1000;
+    setInterval(() => updateStatus(), randomTime);
+    setInterval(() => updateAll(), randomTime * 6);
+};
+
+const changeStar = () => {
+    const star = document.querySelector('.star');
+    if (star.querySelector('span').innerText === '‒') {
+        star.querySelector('path').setAttribute('fill', '');
+        star.querySelector('span').style.color = '#707070';
+    } else star.querySelector('path').setAttribute('stroke', '');
+};
+
+const updateStatus = () => {
+    const ids = []
+    calls.querySelectorAll('.call .icon-Updating').forEach((icon) => {
+        tr = icon.closest('.tr');
+        ids.push(tr.getAttribute('row-id'));
+    });
+    if (ids[0]) {
+        getData('stats', ids);
+        getData('update');
+        getData('order');
+    }
+};
+
+const updateAll = () => {
+    const ids = []
+    calls.querySelectorAll('.call').forEach((tr) => {
+        ids.push(tr.getAttribute('row-id'));
+    });
+    if (ids[0]) {
+        getData('stats', ids);
+        getData('update');
+        getData('order');
+    }
+};
+
+const toggleCheckbox = (checkbox) => {
+    if (checkbox.checked) {
+        if ((document.querySelectorAll('input[type="checkbox"]').length - 1) === document.querySelectorAll('input[type="checkbox"]:checked').length) checkboxAll.checked = true;
+        document.querySelector('#remove').style.display = '';
+    } else {
+        checkboxAll.checked = false;
+        if (!document.querySelector('input[type="checkbox"]:checked')) document.querySelector('#remove').style.display = 'none';
+    }
+};
+
+const addEmptyMessage = () => {
+    const tr = document.createElement('div');
+    tr.classList.add('tr');
+    tr.classList.add('empty');
+    for (let i = 0; i < 10; i++) {
+        const td = document.createElement('span');
+        td.classList.add('td');
+        if (i === 5) td.innerText = 'Нет загруженных звонков';
+        tr.append(td);
+    }
+    calls.append(tr);
+}
+
+const addRow = (loading = false, id) => {
+    if (calls.querySelector('.empty')) calls.querySelector('.empty').remove();
+    const tr = document.createElement('a');
+    tr.setAttribute('target', '_blank');
+    tr.classList.add('tr');
+    tr.classList.add('call');
+    for (let i = 0; i < 10; i++) {
+        const td = document.createElement('span');
+        td.classList.add('td');
+        if (i === 0) td.innerHTML = '<input type="checkbox" onchange="toggleCheckbox(this)">';
+        tr.append(td);
+    }
+    if (loading) {
+        tr.classList.add('loading');
+        tr.setAttribute('row-id', id);
+        calls.append(tr);
+    } else {
+        tr.setAttribute('row-id', id);
+        calls.querySelector('.table-headers').insertAdjacentHTML('afterend', tr.outerHTML);
+    }
+    countSpan.innerText = countCalls;
+    return tr;
+}
+
+const showEmptyRows = (max = countCalls) => {
+    calls.querySelectorAll('.tr.call').forEach((tr) => tr.remove());
+    const active = pageBlock.querySelector('.active');
+    let mult = 0;
+    if (active) mult = countOnPage * (parseInt(active.innerText) - 1);
+    const ids = [];
+    for (let i = 0; i < max; i++) {
+        if (i + 1 > countOnPage) break;
+        const id = order[lastOrderName][i + mult];
+        addRow(true, id);
+        if (callsUploaded.get(id)) showData(callsUploaded.get(id));
+        else ids.push(id);
+    }
+    if (ids[0]) getData('stats', ids);
+    if (countCalls === 0) addEmptyMessage();
+};
+
+const addPages = () => {
+    const pages = Math.floor(countCalls / countOnPage);
+    const maxPageNum = pages + ((countCalls - pages * countOnPage > 0) ? 1 : 0);
+    for (let j = pageBlock.querySelectorAll('.button').length; j > maxPageNum; j--) {
+        pageBlock.querySelectorAll('.button')[j - 1].remove();
+    }
+    for (let j = pageBlock.querySelectorAll('.button').length + 1; j <= maxPageNum; j++) {
+        const pageButton = document.createElement('div');
+        pageButton.classList.add('button');
+        if (j === 1) pageButton.classList.add('active');
+        pageButton.innerText = j;
+        pageButton.addEventListener('click', () => {
+            const prevPage = pageBlock.querySelector('.active');
+            if (prevPage !== pageButton) {
+                prevPage.classList.remove('active');
+                pageButton.classList.add('active');
+                showEmptyRows(countCalls - (j - 1) * countOnPage);
+            }
+        });
+        pageBlock.append(pageButton);
+    }
+    if (pageBlock.querySelectorAll('.button').length === 1) pageBlock.querySelector('.button').remove();
+    if (pageBlock.querySelector('.button') && !pageBlock.querySelector('.active')) pageBlock.querySelector('.button:last-child').classList.add('active');
+}
+
+const showData = (record) => {
+    const tr = calls.querySelector(`.call[row-id="${record.id}"]`);
+    if (!tr) return;
+    tr.setAttribute('row-id', record.id);
+    tr.classList.remove('loading');
+    if (recordsSeen.includes(record.id)) tr.classList.add('seen');
+    const td = tr.children;
+    td[1].innerText = record.name;
+    statusPrev = tr.querySelector('.status');
+    if (record.status !== 'Обработано') {
+        const spanStatus = document.createElement('span');
+        spanStatus.classList.add('status');
+        if (record.status === 'Ошибка') {
+            if (statusPrev) statusPrev.remove();
+            spanStatus.innerHTML = 'Ошибка обработки аудиофайла';
+            const spanRemove = document.createElement('span');
+            spanRemove.innerText = 'Удалить';
+            spanRemove.classList.add('remove');
+            spanRemove.addEventListener('click', () => removeCalls([tr]));
+            spanStatus.append(spanRemove);
+        } else spanStatus.innerHTML = 'Обработка аудиофайла <span class="icon-Updating" style="height: 20.25px;"><span class="path1"></span><span class="path2"></span></span>';
+        statusPrev = tr.querySelector('.status');
+        if (!statusPrev) tr.append(spanStatus);
+    } else {
+        if (statusPrev) statusPrev.remove();
+        const recordDate = record.date.split('T')[0].split('-');
+        td[2].innerText = `${recordDate[2]}.${recordDate[1]}.${recordDate[0]}`;
+        td[3].innerText = record.time.slice(0, -2);
+        for (let i = 4; i < 10; i++) td[i].innerText = '‒';
+        td[5].innerText = record.script_following;
+        td[6].innerText = record.purity;
+        td[7].innerText = record.interceps;
+        const input = document.createElement('input');
+        input.setAttribute('type', 'range');
+        input.classList.add('unknown');
+        input.max = 100;
+        input.style.background = 'linear-gradient(to right, #03dac5 0px, #03dac5 ' + record.vol + '%, #00000020 ' + record.vol + '%, #00000020 100%)';
+        td[8].innerText = '';
+        td[8].append(input);
+        const checked = tr.querySelector('input').checked;
+        tr.href = `${managerPath}/post_analyze/${record.path}/`;
+        if (record.critical) td[9].innerHTML = '<span class="icon-Normal" style="color: #ff7a00;"></span>';
+        else td[9].innerHTML = '<span class="icon-Good"></span>';
+    }
+};
+
+const uploadAudio = (files) => {
+    toUpload += files.length;
+    progress.querySelector('#current-upload').innerText = beenUploaded;
+    progress.querySelector('#summary-upload').innerText = toUpload;
+    files.forEach(file => {
+        uploadCount++;
+        postData(file);
+    });
+};
+
+const nearDrop = (event) => {
+    event.preventDefault();
+    form.classList.add('dropping');
+};
+
+const leaveDrop = () => form.classList.remove('dropping');
+
+const wasDrop = (event) => {
+    event.preventDefault();
+    form.classList.remove('dropping');
+    
+    const items = event.dataTransfer.items;
+    if (items) {
+        const files = [];
+        Array.from(items).forEach((item) => { if (item.kind === 'file') files.push(item.getAsFile()); });
+        uploadAudio(files);
+    }
+};
+
+const updateStat = (stat) => {
+    criticalStat.innerText = stat.critical;
+    clearfyStat.innerText = stat.purity;
+    scriptStat.innerText = stat.script_following;
+};
+
+const doOrder = () => {
+    const active = pageBlock.querySelector('.active');
+    let mult = 0;
+    if (active) mult = countOnPage * (parseInt(active.innerText) - 1);
+    const wasCalls = Array.from(calls.querySelectorAll('.call'));
+    const wasCallsCount = Math.min(wasCalls.length, countOnPage);
+    const ids = [];
+    for (let i = 0; i < wasCallsCount; i++) {
+        const id = order[lastOrderName][i + mult];
+        let removed = false;
+        for (let j = 0; j < wasCalls.length; j++) {
+            if (wasCalls[j].getAttribute('row-id') == id) {
+                const call = wasCalls[j];
+                calls.append(call);
+                wasCalls.splice(j, 1);
+                removed = true;
+                break;
+            }
+        }
+        if (!removed) {
+            addRow(true, id);
+            if (callsUploaded.get(id)) showData(callsUploaded.get(id));
+            else ids.push(id);
+        }
+    }
+    if (ids[0]) getData('stats', ids);
+    wasCalls.forEach((wasCall) => wasCall.remove());
+};
+        
+const eventListeners = () => {
+    form.addEventListener('click', () => { document.querySelector('#dialog').style.display = 'initial'; });
+    form.addEventListener('submit', (event) => { event.preventDefault(); });
+    input.addEventListener('change', () => {
+        uploadAudio(Array.from(input.files));
+        input.value = '';
+    });
+    ths.forEach((th) => {
+        th.addEventListener('click', () => {
+            document.querySelector('.th.sorting').classList.remove('sorting');
+            th.classList.add('sorting');
+            const orderName = th.getAttribute('orderName');
+            if (lastOrderName.startsWith(orderName)) desc = !desc;
+            else desc = false;
+            th.querySelector('.icon-Down').style.transform = desc ? 'rotate(180deg)' : '';
+            lastOrderName = `${orderName}${desc ? '-rev' : ''}`;
+            doOrder();
+        });
+    });
+    checkboxAll.addEventListener('change', () => {
+        document.querySelectorAll('input[type="checkbox"]').forEach((checkbox_other) => {
+            checkbox_other.checked = checkboxAll.checked;
+        });
+        if (checkboxAll.checked) document.querySelector('#remove').style.display = '';
+        else document.querySelector('#remove').style.display = 'none';
+    });
+    document.querySelector('#remove').addEventListener('click', (event) => {
+        document.querySelector('#remove').style.display = "none";
+        checkboxAll.checked = false;
+        const inputs = document.querySelectorAll('input[type="checkbox"]:checked');
+        removeCount = inputs.length;
+        const trsToRemove = [];
+        inputs.forEach((input) => {
+            trsToRemove.push(input.closest('.tr'));
+        });
+        removeCalls(trsToRemove);
+    });
+    document.querySelector('#dialog button').addEventListener('click', () => {
+        document.querySelector('#dialog').style.display = '';
+        reverse = document.querySelector('input[type="radio"]:checked').value;
+        input.click();
+    });
+    document.querySelector('#dialog').addEventListener('click', (event) => {
+        if (event.target.classList.contains('popup')) document.querySelector('#dialog').style.display = '';
+    });
+    document.querySelector('#dialog div.button').addEventListener('click', () => {
+        document.querySelector('#dialog').style.display = '';
+    });
+};
+            
+const removeCalls = async (trs) => {
+    const ids = []
+    trs.forEach((tr) => ids.push(tr.getAttribute('row-id')));
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    formdata.append('calls_id', `[${ids.toString()}]`);
+    const response = await fetch(`${managerPath}/remove/`, {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        countCalls--;
+        countSpan.innerText = countCalls;
+        removeCount--;
+        const idRemove = parseInt(calls.querySelector('.tr.call:last-child').getAttribute('row-id'));
+        const idRemoveIndex = order[lastOrderName].indexOf(idRemove);
+        const idNext = order[lastOrderName][idRemoveIndex + 1];
+        if (countCalls - removeCount > 0 && idNext) {
+            addRow(true, idNext);
+            if (callsUploaded.get(idNext)) showData(callsUploaded.get(idNext));
+            else getData('stats', [idNext]);
+        }
+        if (removeCount === 0) {
+            getData('update');
+            getData('order');
+        }
+        trs.forEach((tr) => tr.remove());
+        addPages();
+        const count = calls.querySelectorAll('.tr.call').length;
+        if (count === 0 && count < countCalls) showEmptyRows(Math.min(countCalls, countOnPage));
+        if (countCalls === 0) addEmptyMessage();
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+
+const setTime = async (id, time) => {
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    if (id !== '') formdata.append('call_id', id);
+    formdata.append('time', time);
+    const response = await fetch(`${managerPath}/upload/`, {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+
+const postData = async (file) => {
+    let time;
+    if (uploadCount > 0) progress.style.display = 'block';
+    const start = new Date().getTime();
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    formdata.append('file', file);
+    formdata.append('reverse', reverse);
+    const response = await fetch(`${managerPath}/upload/`, {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        const end = new Date().getTime();
+        time = end - start;
+        uploadCount--;
+        beenUploaded++;
+        progress.querySelector('#current-upload').innerText = beenUploaded;
+        if (uploadCount === 0) {
+            progress.style.display = '';
+            beenUploaded = 0;
+            toUpload = 0;
+        }
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        countCalls++;
+        addPages();
+        if (countCalls <= countOnPage || pageBlock.querySelector('.active') && pageBlock.querySelector('.active').innerText === '1') {
+            addRow(false, result.id);
+            if (countCalls > countOnPage) calls.querySelector('.tr.call:last-child').remove();
+            showData(result);
+        }
+        setTime(result.id, time);
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+
+const getData = async (type, ids = undefined) => {
+    const formdata = new FormData();
+    formdata.append('type', type);
+    if (ids) {
+        const page = pageBlock.querySelector('.button.active');
+        formdata.append('start_num', page ? (page.innerText - 1) * countOnPage : 0);
+        formdata.append('calls_id', `[${ids.toString()}]`);
+    }
+    const response = await fetch(`${managerPath}/calls/`,
+    {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        if (type === 'update') updateStat(result);
+        else if (type === 'order') {
+            const orderPrev = order;
+            order = result;
+            if (!orderPrev) showEmptyRows();
+            doOrder();
+        } else if (type === 'stats') {
+            fillGlobal(result)
+            Object.keys(DarwinAI).forEach((i) => {
+                showData(DarwinAI[i]);
+                callsUploaded.set(DarwinAI[i].id, DarwinAI[i]);
+            });
+            const endLoading = new Date().getTime();
+            const timeLoading = endLoading - startLoading;
+            setTime('', timeLoading);
+        }
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+{% endblock %}

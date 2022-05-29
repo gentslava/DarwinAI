@@ -1,0 +1,623 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="head">
+    <div class="nav-prev">
+        <h1>Настройка скриптов</h1>
+    </div>
+    <div class="call-summary"></div>
+</div>
+<div class="body">
+    <div class="control">
+        <div class="button" id="upload">Добавить скрипт</div>
+    </div>
+    <div class="script-settings"></div>
+</div>
+<div class="popup add-block scripts">
+    <div>
+        <div>
+            <p style="align-self: flex-start; font-size: 22px; font-weight: 500; margin: 0; margin-bottom: 30px;">Конструктор скрипта</p>
+            <form class="person" style="overflow-y: auto; overflow-x: hidden; padding-right: 20px; border-right: 1px solid #dadada;">
+                {% csrf_token %}
+                <div class="input-names">
+                    <div>
+                        <label>Название скрипта{{form.name}}</label>
+                    </div>
+                    <div>
+                        <label>Отдел<select></select></label>
+                    </div>
+                    <div>
+                        <label>Проект<select></select></label>
+                    </div>
+                </div>
+                <div style="margin-top: 25px; height: 100%; flex-direction: column; overflow-y: auto; opacity: 0.5;">
+                    <p style="align-self: flex-start; font-size: 18px; font-weight: 500; margin-bottom: 20px;">Этап воронки</p>
+                    <select style="user-select: none; pointer-events: none;"><option>Не выбран</option></select>
+                </div>
+                <div class="control-buttons" style="margin-top: 40px;">
+                    <button type="submit" class="button">Создать</button>
+                    <div class="button cancel">Отмена</div>
+                </div>
+            </form>
+        </div>
+        <div style="margin-top: 25px; height: 100%; flex-direction: column; overflow-y: auto; align-items: initial;">
+            <p style="align-self: flex-start; font-size: 18px; font-weight: 500; margin-bottom: 20px;">Список фраз</p>
+            <div class="button add-phrase"><span>+</span>Добавить фразу</div>
+            <div class="phrases"></div>
+        </div>
+    </div>
+</div>
+<div class="popup edit-block scripts">
+    <div>
+        <div>
+            <p style="align-self: flex-start; font-size: 22px; font-weight: 500; margin: 0; margin-bottom: 30px;">Конструктор скрипта</p>
+            <form class="person" style="overflow-y: auto; overflow-x: hidden; padding-right: 20px; border-right: 1px solid #dadada">
+                {% csrf_token %}
+                <div class="input-names">
+                    <div>
+                        <label>Название скрипта{{form.name}}</label>
+                    </div>
+                    <div>
+                        <label>Отдел<select></select></label>
+                    </div>
+                    <div>
+                        <label>Проект<select></select></label>
+                    </div>
+                </div>
+                <div style="margin-top: 25px; height: 100%; flex-direction: column; overflow-y: auto; opacity: 0.5;">
+                    <p style="align-self: flex-start; font-size: 18px; font-weight: 500; margin-bottom: 20px;">Этап воронки</p>
+                    <select style="user-select: none; pointer-events: none;"><option>Не выбран</option></select>
+                </div>
+                <div class="control-buttons" style="margin-top: 40px;">
+                    <button type="submit" class="button">Сохранить</button>
+                    <div class="button remove">Удалить скрипт</div>
+                </div>
+            </form>
+        </div>
+        <div style="margin-top: 25px; height: 100%; flex-direction: column; overflow-y: auto; align-items: initial;">
+            <p style="align-self: flex-start; font-size: 18px; font-weight: 500; margin-bottom: 20px;">Список фраз</p>
+            <div class="button add-phrase"><span>+</span>Добавить фразу</div>
+            <div class="phrases"></div>
+        </div>
+    </div>
+</div>
+<div class="popup script-analogs" id="dialog">
+    <div style="width: 370px; text-align: center;">
+        <p>Введите синонимы фразы</p>
+        <span></span>
+        <div class="dictionary" id="scripts" style="margin-right: 0;">
+            <form method="post">
+                <input type="text" name="word" placeholder="Введите фразу или слово" maxlength="255" required="" id="id_word">
+                <button type="submit">+</button>
+            </form>
+            <div class="words"></div>
+        </div>
+        <div class="call-stats-element-row">
+            <button class="button confirm">Сохранить</button>
+            <div class="button">Отмена</div>
+        </div>
+    </div>
+</div>
+<div id="phrase-menu" class="context-menu">
+    <div class="item" id="edit-analogs">Аналоги фразы</div>
+    <div class="item" id="edit-condition" style="color: #bbb;">Добавить условие</div>
+    <div class="item" id="edit-remove">Удалить фразу</div>
+</div>
+<div class="popup" id="dialog-remove">
+    <div style="width: 270px; text-align: center;">
+        <p>Вы точно хотите удалить скрипт?</p>
+        <span style="font-size: 13px;">Вся статистика по нему будет удалена</span>
+        <div class="call-stats-element-row">
+            <button type="submit" class="button remove confirm">Удалить</button>
+            <div class="button">Отмена</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+document.querySelectorAll('.menu a')[3].classList.add('active');
+const addBlock = document.querySelector('.add-block');
+const addForm = addBlock.querySelector('form');
+const editBlock = document.querySelector('.edit-block');
+const editForm = editBlock.querySelector('form');
+const phraseMenu = document.querySelector('#phrase-menu');
+const dialog = document.querySelector('#dialog');
+const dialogForm = dialog.querySelector('form');
+const departments = eval('{{departments}}'.replace(/&#x27;/g, '\''));
+const products = eval('{{products}}'.replace(/&#x27;/g, '\''));
+let prevX, prevY;
+let prevOffsetLeft, prevOffsetTop;
+let contextPhrase;
+
+const setDepartments = () => {
+    let i = 0
+    document.querySelectorAll('form').forEach((form) => {
+        if (i > 1) return; i++;
+        const selects = form.querySelectorAll('select');
+        departments.forEach((department) => {
+            const option = document.createElement('option');
+            option.value = department;
+            option.innerText = department;
+            selects[0].append(option);
+        });
+        products.forEach((product) => {
+            const option = document.createElement('option');
+            option.value = product;
+            option.innerText = product;
+            selects[1].append(option);
+        });
+    });
+};
+
+window.onload = () => {
+    setDepartments();
+    getData();
+};
+
+// Перемещение фразы скрипта
+const orderPhrases = (block) => {
+    const event = window.event;
+    if (event.screenX === event.screenY && event.screenX === 0) return;
+    event.target.classList.add('draggable');
+    const x = prevOffsetLeft + event.x - prevX;
+    const y = prevOffsetTop + event.y - prevY;
+    const coordsY = [y];
+    const phrases = block.querySelectorAll('.phrase:not(.draggable)');
+    phrases.forEach((phrase) => coordsY.push(phrase.offsetTop));
+    coordsY.sort((a, b) => a - b);
+    for (let i = 0; i < coordsY.length; i++) {
+        phrases.forEach((phrase) => { if (coordsY[i] === phrase.offsetTop) phrase.style.order = i; });
+        if (coordsY[i] === y) event.target.style.order = i;
+    }
+};
+
+// Изменение размера поля ввода, границы
+const textAreaResize = (textArea) => {
+    textArea.style.height = 'auto';
+    if (textArea.value === '') textArea.style.borderWidth = '1px';
+    else textArea.style.borderWidth = 0;
+    const height = Math.max(28, textArea.scrollHeight);
+    textArea.style.height = `${height}px`;
+};
+
+// Добавление фразы
+const createPhrase = (block, phrase = null) => {
+    const divPhrase = document.createElement('div');
+    divPhrase.classList.add('phrase');
+    divPhrase.style.order = block.querySelectorAll('.phrase').length;
+    divPhrase.addEventListener('mousedown', (event) => {
+        prevX = event.x;
+        prevY = event.y;
+        prevOffsetLeft = divPhrase.offsetLeft;
+        prevOffsetTop = divPhrase.offsetTop;
+    });
+    divPhrase.addEventListener('drag', () => orderPhrases(block));
+    divPhrase.addEventListener('dragend', () => divPhrase.classList.remove('draggable'));
+    
+    const textArea = document.createElement('textArea');
+    textArea.required = true;
+    if (phrase) {
+        divPhrase.setAttribute('data-id', phrase.id);
+        textArea.value = phrase.text;
+    }
+    textArea.rows = '1';
+    setTimeout(() => textAreaResize(textArea));
+    textArea.addEventListener('input', () => textAreaResize(textArea));
+
+    const imgDrag = document.createElement('img');
+    imgDrag.src = '{% static 'images/drag.svg' %}';
+    const divText = document.createElement('div');
+    divText.append(textArea);
+    const divAnalogs = document.createElement('div');
+    if (phrase && phrase.analogs.length > 0) {
+        divAnalogs.classList.add('analogs');
+        phrase.analogs.forEach((analog) => {
+            const pAnalog = document.createElement('p');
+            pAnalog.innerText = analog;
+            divAnalogs.append(pAnalog);
+        });
+        let elHeight = 0;
+        setTimeout(() => {
+            elHeight = divAnalogs.offsetHeight;
+            divAnalogs.style.maxHeight = 0;
+        }, 0);
+        divPhrase.addEventListener('click', () => {
+            divAnalogs.classList.toggle('active');
+            if (divAnalogs.classList.contains('active')) divAnalogs.style.maxHeight = `${elHeight}px`;
+            else divAnalogs.style.maxHeight = 0;
+        });
+        divText.append(divAnalogs);
+    }
+    const imgMenu = document.createElement('img');
+    imgMenu.classList.add('menu-button');
+    imgMenu.src = '{% static 'images/dots.svg' %}';
+    imgMenu.addEventListener('click', (event) => {
+        phraseMenu.classList.add('visible');
+        const x = 55;
+        const y = event.target.getBoundingClientRect().top + 10;
+        phraseMenu.style.right = `${x}px`;
+        phraseMenu.style.top = `${y}px`;
+        contextPhrase = divPhrase;
+    });
+
+    divPhrase.append(imgDrag);
+    divPhrase.append(divText);
+    divPhrase.append(imgMenu);
+    block.querySelector('.phrases').append(divPhrase);
+    textArea.focus();
+};
+
+// Добавление скрипта
+const createScript = (script) => {
+    const divScript = document.createElement('div');
+    divScript.classList.add('script');
+    divScript.setAttribute('data-id', script.id);
+    const scriptBody = document.createElement('div');
+    const divDataNames = document.createElement('div');
+    divDataNames.classList.add('names');
+    divDataNames.innerHTML = '<p>Отдел:</p><p>Проект:</p><p style="margin-top: 15px;">Список фраз</p>';
+    
+    // Заполнение значений
+    const pName = document.createElement('p');
+    pName.classList.add('name');
+    pName.innerText = script.name;
+    const divData = document.createElement('div');
+    const pDepartment = document.createElement('p');
+    pDepartment.innerText = script.department;
+    divData.append(pDepartment);
+    const pProduct = document.createElement('p');
+    pProduct.innerText = script.product;
+    divData.append(pProduct);
+    
+    const phrasesDiv = document.createElement('div');
+    phrasesDiv.classList.add('phrases');
+    if (script.phrases.length > 0) {
+        script.phrases.forEach((phrase) => {
+            const divPhrase = document.createElement('div');
+            divPhrase.classList.add('phrase');
+            divPhrase.setAttribute('data-id', phrase.id);
+            const pText = document.createElement('p');
+            pText.innerText = phrase.text;
+            divPhrase.append(pText);
+            const divAnalogs = document.createElement('div');
+            if (phrase.analogs.length > 0) {
+                divAnalogs.classList.add('analogs');
+                phrase.analogs.forEach((analog) => {
+                    const pAnalog = document.createElement('p');
+                    pAnalog.innerText = analog;
+                    divAnalogs.append(pAnalog);
+                });
+                let elHeight = 0;
+                setTimeout(() => {
+                    elHeight = divAnalogs.offsetHeight;
+                    divAnalogs.style.maxHeight = 0;
+                }, 0);
+                divPhrase.addEventListener('click', () => {
+                    divAnalogs.classList.toggle('active');
+                    if (divAnalogs.classList.contains('active')) divAnalogs.style.maxHeight = `${elHeight}px`;
+                    else divAnalogs.style.maxHeight = 0;
+                });
+                divPhrase.append(divAnalogs);
+            }
+            phrasesDiv.append(divPhrase);
+        });
+    } else {
+        
+    }
+
+    //const spanEdit = document.createElement('span');
+    //spanEdit.classList.add('icon-Edit');
+    const spanEdit = document.createElement('img');
+    spanEdit.src = '{% static 'images/edit.svg' %}';
+    spanEdit.addEventListener('click', () => {
+        editForm.setAttribute('data-id', script.id);
+        const inputs = editForm.querySelectorAll('input');
+        const selects = editForm.querySelectorAll('select');
+        inputs[1].value = pName.innerText;
+        selects[0].value = pDepartment.innerText;
+        selects[1].value = pProduct.innerText;
+        const divPhrases = phrasesDiv.querySelectorAll('div:not(.analogs)');
+        divPhrases.forEach((divPhrase) => {
+            const id = divPhrase.getAttribute('data-id');
+            const text = divPhrase.querySelector('p').innerText;
+            const analogs = [];
+            divPhrase.querySelectorAll('.analogs > p').forEach((pAnalog) => analogs.push(pAnalog.innerText));
+            const phrase = {'id': id, 'text': text, 'analogs': analogs};
+            createPhrase(editBlock, phrase);
+        });
+        editBlock.classList.add('active');
+    });
+    const spanCopy = document.createElement('img');
+    spanCopy.src = '{% static 'images/copy.svg' %}';
+    spanCopy.style.right = '50px';
+    spanCopy.addEventListener('click', () => {
+        addForm.setAttribute('data-id', '');
+        const inputs = addForm.querySelectorAll('input');
+        const selects = addForm.querySelectorAll('select');
+        inputs[1].value = `Copy ${pName.innerText}`;
+        selects[0].value = pDepartment.innerText;
+        selects[1].value = pProduct.innerText;
+        const divPhrases = phrasesDiv.querySelectorAll('div:not(.analogs)');
+        divPhrases.forEach((divPhrase) => {
+            const id = '';
+            const text = divPhrase.querySelector('p').innerText;
+            const analogs = [];
+            divPhrase.querySelectorAll('.analogs > p').forEach((pAnalog) => analogs.push(pAnalog.innerText));
+            const phrase = {'id': id, 'text': text, 'analogs': analogs};
+            createPhrase(addBlock, phrase);
+        });
+        sendForm('add', addBlock);
+    });
+    const divStatus = document.createElement('div');
+    divStatus.innerHTML = `<label class="toggle-switch">Статус
+        <input type="checkbox" id="toggle-switch-input-${script.id}">
+        <label for="toggle-switch-input-${script.id}" style="position: absolute; top: 20px;"></label>
+        <span style="position: absolute; top: 25px; left: calc(var(--bar-width) + 25px);">${script.active ? 'Активный' : 'Неактивный'}</span>
+    </label>`;
+    divScript.append(pName);
+    scriptBody.append(divDataNames);
+    scriptBody.append(divData);
+    divScript.append(scriptBody);
+    divScript.append(phrasesDiv);
+    divScript.append(spanEdit);
+    divScript.append(spanCopy);
+    divScript.append(divStatus);
+    document.querySelector('.script-settings').append(divScript);
+    const checkbox = document.querySelector(`#toggle-switch-input-${script.id}`);
+    checkbox.checked = script.active;
+    checkbox.addEventListener('change', () => {
+        divStatus.querySelector('span').innerText = checkbox.checked ? 'Активный' : 'Неактивный';
+        postData('edit-active', script.id, script.name, script.department, script.product, '', checkbox.checked);
+    });
+};
+
+// Закрытие попапа
+const closeBlock = (block) => {
+    block.classList.remove('active');
+    block.style.display = '';
+    block.querySelectorAll('input').forEach((input) => input.value = '');
+    block.querySelectorAll('.input-names select').forEach((select) => select.value = departments[0]);
+    block.querySelectorAll('.phrase').forEach((phrase) => phrase.remove());
+    block.querySelectorAll('.words .word').forEach((button) => button.remove());
+};
+
+// Отправка формы
+const sendForm = (method, block) => {
+    const form = block.querySelector('form');
+    const id = form.getAttribute('data-id') ? form.getAttribute('data-id') : '';
+    const inputs = form.querySelectorAll('input');
+    const selects = form.querySelectorAll('select');
+    const name = inputs[1].value;
+    const department = selects[0].value;
+    const product = selects[1].value;
+    const phrases = [];
+    phrasesForm = Array.from(block.querySelectorAll('.phrase'));
+    phrasesForm.sort((a, b) => (parseInt(a.style.order) > parseInt(b.style.order)) ? 1 : -1);
+    phrasesForm.forEach((phraseForm) => {
+        const textArea = phraseForm.querySelector('textarea');
+        const analogs = [];
+        phraseForm.querySelectorAll('p').forEach((pAnalog) => analogs.push(pAnalog.innerHTML));
+        if (textArea.value === '') {
+            if (analogs.length > 0) textArea.value = analogs.shift();
+            else return;
+        }
+        phrases.push({
+            'id': phraseForm.getAttribute('data-id') ? phraseForm.getAttribute('data-id') : '',
+            'text': textArea.value,
+            'number': phraseForm.style.order,
+            'analogs': analogs
+        });
+    });
+    postData(method, id, name, department, product, phrases);
+};
+
+const addToDialog = (word) => {
+    const words = dialog.querySelector('.words');
+    const buttonWord = document.createElement('div');
+    buttonWord.classList.add('word', 'button');
+    buttonWord.innerText = `${word} `;
+    const span = document.createElement('span');
+    span.innerText = '–';
+    span.addEventListener('click', () => {
+        const index = Array.from(words.querySelectorAll('.word')).indexOf(buttonWord);
+        contextPhrase.querySelectorAll('p')[index].remove();
+        buttonWord.remove();
+    });
+    buttonWord.append(span);
+    words.append(buttonWord);
+}
+
+const addAnalog = () => {
+    const input = dialogForm.querySelector('input');
+    const analog = input.value;
+    input.value = '';
+    addToDialog(analog)
+    const pAnalog = document.createElement('p');
+    pAnalog.innerText = analog;
+    contextPhrase.querySelector('div').append(pAnalog);
+};
+
+const eventListeners = () => {
+    document.querySelector('#upload').addEventListener('click', () => {
+        addBlock.classList.add('active');
+    });
+    document.querySelectorAll('.popup').forEach((block) => {
+        block.addEventListener('click', (event) => {
+            if (event.target.classList.contains('popup'))
+                if (block.classList.contains('add-block')) block.classList.remove('active');
+                else closeBlock(block);
+        });
+        block.querySelectorAll('.button:not(.add-phrase, [type="submit"])').forEach((button) => button.addEventListener('click', () => closeBlock(block)));
+        if (!block.id.startsWith('dialog')) {
+            block.querySelectorAll('.button')[2].addEventListener('click', () => createPhrase(block));
+            const form = block.querySelector('form');
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const method = form === addForm ? 'add' : 'edit';
+                sendForm(method, block);
+            });
+            form.querySelectorAll('.input-names input').forEach((input) => {
+                input.addEventListener('keydown', () => input.closest('label').style.color = '');
+            });
+            form.querySelector('button').addEventListener('click', () => {
+                form.querySelectorAll('input:invalid').forEach((input) => input.closest('label').style.color = '#b00020');
+            });
+        }
+    });
+    dialogForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        addAnalog();
+    });
+    // Удаление скрипта
+    editBlock.querySelector('.remove').addEventListener('click', (event) => {
+        document.querySelector('#dialog-remove').style.display = 'initial';
+    });
+    document.addEventListener('click', (event) => {
+        if (!event.target.classList.contains('menu-button')) phraseMenu.classList.remove('visible');
+    });
+    document.querySelector('#edit-analogs').addEventListener('click', (event) => {
+        dialog.style.display = 'block';
+        dialog.querySelector('span').innerText = contextPhrase.querySelector('textarea').value;
+        const words = dialog.querySelector('.words');
+        const pAnalogs = contextPhrase.querySelectorAll('div p');
+        pAnalogs.forEach((pAnalog) => addToDialog(pAnalog.innerText));
+    });
+    document.querySelector('#edit-remove').addEventListener('click', (event) => {
+        contextPhrase.remove();
+    });
+    document.querySelector('#dialog-remove button').addEventListener('click', (event) => {
+        idRemove = editForm.getAttribute('data-id');
+        removeData(idRemove);
+        document.querySelector('#dialog-remove').style.display = '';
+    });
+};
+
+// Удаление скрипта
+const removeData = async (id) => {
+    const response = await fetch(`delete/${id}/`, {
+        method: 'DELETE',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        document.querySelector(`.script[data-id="${id}"]`).remove();
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+
+// Отправка данных на сервер
+const postData = async (method, id, name, department, product, phrases, active = '') => {
+    const formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken', csrf);
+    formdata.append('method', method);
+    formdata.append('id', id);
+    formdata.append('name', name);
+    formdata.append('department', department);
+    formdata.append('product', product);
+    formdata.append('phrases', JSON.stringify(phrases));
+    formdata.append('active', active);
+    const response = await fetch('add/', {
+        method: 'POST',
+        mode: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrf,
+        },
+        body: formdata
+    })
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        if (method === 'edit-active') {
+            result.forEach((script) => {
+                const scriptBlock = document.querySelector(`.script[data-id="${script.id}"]`);
+                scriptBlock.querySelector(`#toggle-switch-input-${script.id}`).checked = script.active;
+                scriptBlock.querySelector('span').innerText = script.active ? 'Активный' : 'Неактивный';
+            });
+        } else {
+            const block = document.querySelector(`.${method}-block`);
+            closeBlock(block);
+            if (method === 'add') createScript(result);
+            else {
+                const scriptBlock = document.querySelector(`.script[data-id="${id}"]`);
+                const ps = scriptBlock.querySelectorAll('div:not(.names) > p');
+                ps[0].innerText = result.name;
+                ps[1].innerText = result.department;
+                ps[2].innerText = result.product;
+                const phrases = scriptBlock.querySelector('.phrases');
+                phrases.querySelectorAll('div').forEach((phrase) => {
+                    phrase.remove();
+                });
+                result.phrases.forEach((phrase) => {
+                    const divPhrase = document.createElement('div');
+                    divPhrase.classList.add('phrase');
+                    divPhrase.setAttribute('data-id', phrase.id);
+                    const pText = document.createElement('p');
+                    pText.innerText = phrase.text;
+                    divPhrase.append(pText);
+                    const divAnalogs = document.createElement('div');
+                    if (phrase.analogs.length > 0) {
+                        divAnalogs.classList.add('analogs');
+                        phrase.analogs.forEach((analog) => {
+                            const pAnalog = document.createElement('p');
+                            pAnalog.innerText = analog;
+                            divAnalogs.append(pAnalog);
+                        });
+                        let elHeight = 0;
+                        setTimeout(() => {
+                            elHeight = divAnalogs.offsetHeight;
+                            divAnalogs.style.maxHeight = 0;
+                        }, 0);
+                        divPhrase.addEventListener('click', () => {
+                            divAnalogs.classList.toggle('active');
+                            if (divAnalogs.classList.contains('active')) divAnalogs.style.maxHeight = `${elHeight}px`;
+                            else divAnalogs.style.maxHeight = 0;
+                        });
+                        divPhrase.append(divAnalogs);
+                    }
+                    phrases.append(divPhrase);
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+
+// Получение скриптов с сервера
+const getData = async () => {
+    const response = await fetch('words-list/')
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        fillGlobal(result);
+        for (let i = 0; i < DarwinAI.scripts.length; i++) createScript(DarwinAI.scripts[i]);
+        eventListeners();
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+{% endblock %}

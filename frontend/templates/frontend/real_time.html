@@ -1,0 +1,400 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="head">
+    <div class="nav-prev">
+        <a href="" id="back">
+            <p class="icon-Back"></p>
+        </a>
+        <h1>Online Коучинг</h1>
+    </div>
+    <div class="call-summary"></div>
+</div>
+<div class="body" id="real-time">
+    <div class="call">
+        <div class="call-stats-element-column" style="width: calc(42.38% - 25px);">
+            <div class="call-stats-element-row call-stats-element" id="speech-volume" style="align-items: center; justify-content: space-between;">
+                <div class="call-stats-element-column" style=" padding-right: 30px;">
+                    <div class="call-stats-element-row" style="align-items: center; margin: 0;">
+                        <span id="current-time" style="width: 40px; font-size: 12px; color: #949494; margin: 0;">00:00</span>
+                        <input type="range" class="unknown" id="seek-slider" max="100" value="0" style="margin-right: 0;">
+                    </div>
+                    <div style="margin: 0; margin-left: 35px; display: grid;">
+                        <span style="margin: 10px 20px 0; color: #000000b3; font-size: 12px;">Объем речи</span>
+                        <input type="range" class="operator" max="100" value="0">
+                        <input type="range" class="client" max="100" value="0">
+                    </div>
+                </div>
+                <button id="call-button" style=""><p class="icon-Call"></p></button>
+            </div>
+        </div>
+        <audio id="audio" preload="metadata" src="/media/records/{{path}}{{name}}"></audio>
+        <audio id="notification" preload="auto" src={% static 'audio/notification.mp3' %}></audio>
+    </div>
+    <div class="popup" id="progress" style="display: block;">
+        <span class="icon-Updating"><span class="path1"></span><span class="path2"></span></span>
+    </div>
+    <div class="call-stats-element-row">
+        <div class="call-stats-element-column split-3" style="width: 42.38%;">
+            <div class="call-stats-element" id="script" style="max-height: unset;">
+                <div class="call-stats-element-row block-header" style="margin-bottom: 25px;">
+                    <p>Скрипт</p>
+                    <span class="count round">‒</span>
+                </div>
+            </div>
+        </div>
+        <div class="call-stats-element-column split-3" style="width: 33.33%;">
+            <div class="call-stats-element" id="controlling">
+                <div class="call-stats-element-row block-header">
+                    <p>Подстройка под клиента</p>
+                    <span class="count round">‒</span>
+                </div>
+                <div class="call-stats-element-column">
+                    <span style="margin: 0 20px; color: #000000b3; font-size: 12px;">Громкость речи</span>
+                    <input type="range" class="operator" max="100" value="0">
+                    <input type="range" class="client" max="100" value="0">
+                    <span style="margin: 30px 20px 0; color: #000000b3; font-size: 12px;">Скорость речи</span>
+                    <input type="range" class="operator" max="100" value="0">
+                    <input type="range" class="client" max="100" value="0">
+                </div>
+            </div>
+            <div class="call-stats-element" id="hint" style="min-height: 130px;">
+                <div class="call-stats-element-row block-header">
+                    <p>Live подсказки</p>
+                    <span class="count round">‒</span>
+                </div>
+                <div>
+                    <span>Нет подсказок</span>
+                </div>
+            </div>
+        </div>
+        <div class="call-stats-element-column split-3" style="width: 24.28%;">
+            <div class="call-stats-element" style="min-height: 190px;">
+                <div class="call-stats-element-row block-header">
+                    <p>Частые слова клиента</p>
+                    <span class="count round">‒</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+document.querySelectorAll('.menu a')[1].classList.add('active');
+const managerPath = `/${window.location.pathname.split('/')[1]}`;
+document.querySelector('#back').href = `${managerPath}/post_analyze/{{path}}`;
+let isPlaying = false;
+let timer;
+const controllerSlider = document.querySelector('#seek-slider');
+const callButton = document.querySelector('#call-button');
+const audioPlayer = document.querySelector('#audio');
+const notifyPlayer = document.querySelector('#notification');
+const currentTime = document.querySelector('#current-time');
+const scriptBlock = document.querySelector('#script');
+const hintBlock = document.querySelector('#hint');
+const controllingVol = document.querySelectorAll('#speech-volume input:not(.unknown)');
+let width = controllerSlider.clientWidth;
+let controlling = document.querySelectorAll('#controlling input');
+let mouseOver = false;
+let startPos;
+let activeSpeech = new Map();
+const scripts = new Map();
+const scriptTime = [];
+const loudTime = [];
+const additionalTime = [];
+const emotionsTime = [];
+const speeches = [];
+const score = [];
+let speechVolumeOperator = 0;
+let speechVolumeClient = 0;
+let dualChannel = false;
+const maxLoud = 70;
+const maxSpeed = 2000;
+const firstText = hintBlock.querySelector('div:nth-child(2)');
+let prev = '';
+let lastNum = -1;
+let timeInterception = -11;
+const reverse = '{{reverse}}' === 'True';
+const channel0 = reverse ? 'client' : 'operator';
+const channel1 = reverse ? 'operator' : 'client';
+
+controllerSlider.max = width;
+
+const hintsText = [
+    ['Все хорошо', 'Вы отлично разговариваете. Продолжайте в том же духе.', 'icon-Notification'],
+    ['Говорите громче', 'Вы говорите тише собеседника. Старайтесь говорить погромче.', 'icon-Notification'],
+    ['Говорите тише', 'Вы говорите громче собеседника. Лучше говорить потише.', 'icon-Notification'],
+    ['Говорите быстрее', 'Собеседник говорит быстрее Вас. По возможности, говорите быстрее.', 'icon-Notification'],
+    ['Говорите медленнее', 'Для более продуктивного общения старайтесь говорить медленнее.', 'icon-Notification'],
+    ['Долгое молчание', 'Длительные паузы снижают связь с клиентом.', 'icon-Notification'],
+    ['Клиент долго молчит', 'Клиент уже более 20 секунд не реагирует. Уточните все ли ему понятно.', 'icon-Notification'],
+    ['Старайтесь не перебивать', 'Старайтесь дослушивать и не перебивать. Мы все любим когда нас слушают.', 'icon-Notification'],
+    ['Говорите чище', 'Качество вашей речи сильно влияет на комфортное общение с Вами.', 'icon-Notification'],
+    ['Говорите четче', 'Вы говорите неразборчиво. Вас с трудом понимает Darwin AI и, скорее всего, клиент.', 'icon-Notification']
+];
+const hints = [];
+hintsText.forEach((hintText) => {
+    const hint = document.createElement('div');
+    const icon = document.createElement('span');
+    const header = document.createElement('p');
+    const text = document.createElement('span');
+    header.innerText = hintText[0];
+    if (hintText[0] === 'Все хорошо') header.style.color = 'green';
+    text.innerText = hintText[1];
+    icon.classList.add(hintText[2]);
+    hint.append(icon);
+    hint.append(header);
+    hint.append(text);
+    hints.push(hint);
+});
+
+window.onload = () => { getData(); };
+
+const checkCondition = (time) => {
+    let count = 0;
+    const sprO = additionalTime[time][channel0].spr;
+    const sprC = additionalTime[time][channel1].spr_avg;
+    
+    if ((time > 30) && (sprO > sprC * 2)) {
+        count++;
+        if (!hintBlock.contains(hints[4])) {
+            hintBlock.append(hints[4]);
+            notifyPlayer.play();
+        }
+    } else {
+        hints[4].remove();
+    }
+    if (activeSpeech.get('клиент') && activeSpeech.get('менеджер')) {
+        if (time - activeSpeech.get('клиент')[1] > 5 && time - activeSpeech.get('менеджер')[1] > 5) {
+            count++;
+            if (!hintBlock.contains(hints[5])) {
+                hintBlock.append(hints[5]);
+                notifyPlayer.play();
+            }
+        } else {
+            hints[5].remove();
+        }
+        if (time - activeSpeech.get('менеджер')[0] > 20 && time - activeSpeech.get('клиент')[1] > 20) {
+            count++;
+            if (!hintBlock.contains(hints[6])) {
+                hintBlock.append(hints[6]);
+                notifyPlayer.play();
+            }
+        } else {
+            hints[6].remove();
+        }
+    }
+    if (time - timeInterception < 10) {
+        count++;
+        if (!hintBlock.contains(hints[7])) {
+            hintBlock.append(hints[7]);
+            notifyPlayer.play();
+        }
+    } else {
+        hints[7].remove();
+    }
+    if (score[time] < 60) {
+        count++;
+        if (!hintBlock.contains(hints[9])) {
+            hintBlock.append(hints[9]);
+            notifyPlayer.play();
+        }
+    } else {
+        hints[9].remove();
+    }
+    hintBlock.querySelector('span').innerText = count;
+    if ((time > 30) && (count === 0)) hintBlock.append(hints[0]);
+    else hints[0].remove();
+    if (time > 30 || count > 0) firstText.remove();
+    else hintBlock.append(firstText);
+}
+
+const round = (num, coef) => {
+    const addStr = (coef === 100) ? '%' : '';
+    if (num === '-') return num;
+    else return Math.floor(num * coef) + addStr;
+}
+
+const updateProgress = () => {
+    controllerSlider.style.background = 'linear-gradient(to right, #00000060 0px, #00000060 ' + controllerSlider.value + 'px, #00000020 ' + controllerSlider.value + 'px, #00000020 100%)';
+};
+
+const timeToString = (time) => {
+    time = parseInt(time);
+    let seconds = (time % 60).toString();
+    if (seconds.length < 2) seconds = `0${seconds}`;
+    let minutes = parseInt(time / 60).toString();
+    if (minutes.length < 2) minutes = `0${minutes}`;
+    return `${minutes}:${seconds}`;
+}
+
+const parseTime = (stringTime) => {
+    const splitTime = stringTime.split(':');
+    let seconds = 0;
+    for (let i = 0; i < 2; i++) {
+        seconds *= 60;
+        seconds += parseInt(splitTime[i]);
+    }
+    if (splitTime.length > 2) seconds += parseInt(splitTime[2]) / 10;
+    return seconds;
+};
+const duration = parseTime('{{duration}}');
+
+const activeActions = (time) => {
+    let i = 0;
+    const intTime = parseInt(time);
+    scriptTime.forEach((script) => {
+        if (script.count > 1) return;
+        if (script.time <= time) {
+            scripts.get(script.phrase).classList.add('active');
+            i++;
+        } else {
+            scripts.get(script.phrase).classList.remove('active');
+        }
+    });
+    scriptBlock.querySelector('span').innerText = i;
+    controllingVol[0].style.background = 'linear-gradient(to right, #6100ff 0px, #6100ff ' + additionalTime[intTime][channel0].vol_part + '%, #00000020 ' + additionalTime[intTime][channel0].vol_part + '%, #00000020 100%)';
+    controllingVol[1].style.background = 'linear-gradient(to right, #03dac5 0px, #03dac5 ' + additionalTime[intTime][channel1].vol_part + '%, #00000020 ' + additionalTime[intTime][channel1].vol_part + '%, #00000020 100%)';
+    controlling[0].style.background = 'linear-gradient(to right, #6100ff 0px, #6100ff ' + loudTime[intTime][channel0].loud*100/maxLoud + '%, #00000020 ' + loudTime[intTime][channel0].loud*100/maxLoud + '%, #00000020 100%)';
+    controlling[1].style.background = 'linear-gradient(to right, #03dac5 0px, #03dac5 ' + loudTime[intTime][channel1].avg*100/maxLoud + '%, #00000020 ' + loudTime[intTime][channel1].avg*100/maxLoud + '%, #00000020 100%)';
+    controlling[2].style.background = 'linear-gradient(to right, #6100ff 0px, #6100ff ' + additionalTime[intTime][channel0].spr*100/maxSpeed + '%, #00000020 ' + additionalTime[intTime][channel0].spr*100/maxSpeed + '%, #00000020 100%)';
+    controlling[3].style.background = 'linear-gradient(to right, #03dac5 0px, #03dac5 ' + additionalTime[intTime][channel1].spr_avg*100/maxSpeed + '%, #00000020 ' + additionalTime[intTime][channel1].spr_avg*100/maxSpeed + '%, #00000020 100%)';
+    document.querySelector('#controlling div').querySelector('span').innerText = additionalTime[intTime].pod;
+
+    for (i = 0; i < speeches.length; i++) {
+        if (speeches[i].start > time) break;
+        const channel = reverse && dualChannel ? (speeches[i].channel === 'менеджер' ? 'клиент' : 'менеджер') : speeches[i].channel;
+        const start = speeches[i].start;
+        const end = speeches[i].end;
+        if (prev === channel) activeSpeech.set(channel, [activeSpeech.get(channel)[0], end]);
+        else {
+            prev = channel;
+            activeSpeech.set(channel, [start, end]);
+        }
+        if (channel === 'менеджер') {
+            if (speeches[i].interception === 1) timeInterception = time;
+            else timeInterception = -11;
+        }
+    }
+
+    checkCondition(intTime);
+};
+
+const advance = () => {
+    timer = setTimeout(advance, 200);
+    const time = audioPlayer.currentTime;
+    if (audioPlayer.paused) {
+        clearTimeout(timer);
+        if (isPlaying) toggle();
+    }
+    percent = Math.floor(time * width / duration);
+    currentTime.innerText = timeToString(time);
+    controllerSlider.value = percent;
+    updateProgress();
+    activeActions(time)
+};
+
+const toggle = () => {
+    if (isPlaying) {
+        audioPlayer.pause();
+        //audioPlayer.currentTime = 0;
+    }
+    else audioPlayer.play();
+    callButton.classList.toggle('active');
+    isPlaying = !isPlaying;
+};
+
+const showScript = (scriptsTable) => {
+    Object.keys(scriptsTable).forEach((script) => {
+        const scriptButton = document.createElement('div');
+        scriptButton.classList.add('script');
+        scriptButton.innerText = scriptsTable[script].text;
+        scriptBlock.append(scriptButton);
+        if (scriptsTable[script].said) scripts.set(scriptsTable[script].text, scriptButton);
+    });
+};
+
+const fillPage = () => {
+    if (DarwinAI.info.client) dualChannel = true;
+    showScript(DarwinAI.script_words[channel0].table);
+    Object.keys(DarwinAI.score).forEach((i) => {
+        score.push(DarwinAI.score[i][channel0]);
+    });
+    Object.keys(DarwinAI.speak_model).forEach((i) => {
+        speeches.push({
+            'start': DarwinAI.speak_model[i].start,
+            'end': DarwinAI.speak_model[i].end,
+            'channel': DarwinAI.speak_model[i].channel,
+            'interception': DarwinAI.speak_model[i].interception
+        });
+    });
+    Object.keys(DarwinAI.script_words[channel0].timing).forEach((i) => {
+        scriptTime.push({
+            'time': parseTime(DarwinAI.script_words[channel0].timing[i].start),
+            'phrase': DarwinAI.script_words[channel0].timing[i].words,
+            'count': DarwinAI.script_words[channel0].timing[i].words_counter
+        });
+    });
+    if (dualChannel) {
+        Object.keys(DarwinAI.loud).forEach((i) => {
+            loudTime.push({
+                'operator': {
+                    'loud': DarwinAI.loud[i].operator,
+                    'vsplesk': DarwinAI.loud[i].operator_vsplesk,
+                    'avg': DarwinAI.loud[i].operator_avg
+                },
+                'client': {
+                    'loud': DarwinAI.loud[i].client,
+                    'vsplesk': DarwinAI.loud[i].client_vsplesk,
+                    'avg': DarwinAI.loud[i].client_avg
+                }
+            });
+        });
+        Object.keys(DarwinAI.additional).forEach((i) => {
+            additionalTime.push({
+                'operator': {
+                    'spr': DarwinAI.additional[i].operator_spr,
+                    'spr_avg': DarwinAI.additional[i].operator_spr_avg,
+                    'vol_part': DarwinAI.additional[i].operator_vol_part
+                },
+                'client': {
+                    'spr': DarwinAI.additional[i].client_spr,
+                    'spr_avg': DarwinAI.additional[i].client_spr_avg,
+                    'vol_part': DarwinAI.additional[i].client_vol_part
+                },
+                'pod': (DarwinAI.additional[i].pod !== '‒') ? round(DarwinAI.additional[i].pod, 100) : DarwinAI.additional[i].pod
+            });
+        });
+    }
+};
+
+const eventListeners = () => {
+    audioPlayer.addEventListener('playing', advance);
+    controllerSlider.addEventListener('input', () => {
+        audioPlayer.currentTime = controllerSlider.value * audioPlayer.duration / width;
+        advance();
+    });
+    callButton.addEventListener('click', toggle);
+};
+
+const getData = async () => {
+    const response = await fetch(`${managerPath}/real_time/{{path}}.speak-model/`)
+    .then(response => {
+        status_code = response.status;
+        if (status_code != 200) throw status_code;
+        result = response.json();
+        return result;
+    })
+    .then(result => {
+        if (result) {
+            fillGlobal(result);
+            fillPage();
+            eventListeners();
+            document.querySelector('#progress').style.display = '';
+        }
+    })
+    .catch(error => {
+        console.log(error);
+    });
+};
+{% endblock %}

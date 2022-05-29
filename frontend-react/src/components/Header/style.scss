@@ -1,0 +1,29 @@
+.header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h1 {
+        color: #202020;
+        font-weight: 400;
+    }
+
+    input {
+        height: 30px;
+    }
+
+    .nav-prev {
+        display: inherit;
+        align-items: inherit;
+
+        a {
+            margin-right: 20px;
+        }
+
+        p {
+            color: #6100ff;
+        }
+    }
+}
