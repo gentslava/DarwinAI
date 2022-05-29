@@ -1,0 +1,114 @@
+@font-face {
+  font-family: 'darwin';
+  src:  url('fonts/darwin.eot?j48cj4');
+  src:  url('fonts/darwin.eot?j48cj4#iefix') format('embedded-opentype'),
+    url('fonts/darwin.ttf?j48cj4') format('truetype'),
+    url('fonts/darwin.woff?j48cj4') format('woff'),
+    url('fonts/darwin.svg?j48cj4#darwin') format('svg');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'darwin' !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-Logo:before {
+  content: "\e900";
+}
+.icon-User:before {
+  content: "\e910";
+}
+.icon-Email:before {
+  content: "\e911";
+}
+.icon-Password:before {
+  content: "\e912";
+}
+.icon-Show:before {
+  content: "\e913";
+}
+.icon-Back:before {
+  content: "\e901";
+}
+.icon-Dashboard:before {
+  content: "\e915";
+}
+.icon-Analytics:before {
+  content: "\e902";
+}
+.icon-Online:before {
+  content: "\e903";
+}
+.icon-Dictionary:before {
+  content: "\e91b";
+}
+.icon-Scripts:before {
+  content: "\e904";
+}
+.icon-Phone-settings:before {
+  content: "\e916";
+}
+.icon-Target:before {
+  content: "\e905";
+}
+.icon-Settings:before {
+  content: "\e906";
+}
+.icon-Operator:before {
+  content: "\e907";
+}
+.icon-Client:before {
+  content: "\e908";
+}
+.icon-Call:before {
+  content: "\e909";
+}
+.icon-Notification:before {
+  content: "\e90a";
+}
+.icon-Updated:before {
+  content: "\e90b";
+}
+.icon-Updating .path1:before {
+  content: "\e90c";
+  color: ;
+}
+.icon-Updating .path2:before {
+  content: "\e90d";
+  margin-left: -1em;
+  color: rgb(97, 0, 255);
+}
+.icon-Error:before {
+  content: "\e90e";
+}
+.icon-Down:before {
+  content: "\e90f";
+}
+.icon-Right:before {
+  content: "\e914";
+}
+.icon-Good:before {
+  content: "\e91a";
+}
+.icon-Normal:before {
+  content: "\e919";
+}
+.icon-Bad:before {
+  content: "\e918";
+}
+.icon-Rotate:before {
+  content: "\e917";
+}
